@@ -30,7 +30,7 @@
 		"eslint": "^10.1.0",
 		"eslint-config-next": "16.1.6",
 		"next-validate-link": "^1.6.4",
-		"postcss": "^8.5.8",
+		"postcss": "^8.5.26",
 		"tailwindcss": "^4.1.18",
 		"typescript": "^5.9.3"
 	}
