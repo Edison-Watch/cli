@@ -1,10 +1,10 @@
 ---
 name: code-quality
-description: Instructions for running code quality checks and maintaining standards in the Rust-Template project.
+description: Instructions for running code quality checks and maintaining standards in the SealGate project.
 ---
 # Code Quality Skill
 
-This skill provides instructions for running code quality checks and maintaining standards in the Rust-Template project.
+This skill provides instructions for running code quality checks and maintaining standards in the SealGate project.
 
 ## Commands
 

@@ -1,18 +1,18 @@
 # Releasing
 
-How to cut a new release of the `appctl` binary (the CLI + HTTP API server).
+How to cut a new release of the `sealg` binary (the CLI + HTTP API server).
 
 ## Overview
 
 Pushing a `v*` git tag triggers the [Release workflow](.github/workflows/release.yml),
-which builds `appctl` for each target platform and attaches the archives to a
+which builds `sealg` for each target platform and attaches the archives to a
 GitHub Release.
 
 | Platform | Artifact |
 |----------|----------|
-| macOS    | `appctl` (Intel + Apple Silicon) archive |
-| Windows  | `appctl.exe` archive |
-| Linux    | `appctl` archive |
+| macOS    | `sealg` (Intel + Apple Silicon) archive |
+| Windows  | `sealg.exe` archive |
+| Linux    | `sealg` archive |
 
 The canonical release pipeline is [`cargo-dist`](https://opensource.axo.dev/cargo-dist/),
 configured in `dist-workspace.toml`. The committed `release.yml` is a functional
@@ -52,7 +52,7 @@ archives are attached, edit the release notes if desired, and publish.
 
 ## Code Signing (optional)
 
-`appctl` is a headless binary, so signing is not required to run it. If you
+`sealg` is a headless binary, so signing is not required to run it. If you
 distribute installers via `cargo-dist` and want to avoid OS warnings, configure
 platform signing in `dist-workspace.toml` per the cargo-dist docs (macOS
 notarization, Windows Authenticode). No signing keys are needed for the baseline
