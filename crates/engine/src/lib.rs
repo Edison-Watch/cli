@@ -8,6 +8,7 @@ pub mod commands;
 pub mod context;
 pub mod doctor;
 mod env;
+pub mod gateway;
 pub mod platform;
 pub mod probes;
 pub mod scenario;
@@ -17,4 +18,5 @@ pub mod types;
 // Re-exports for convenience
 pub use commands::{Command, CommandError, CommandRegistry, CommandSchema, ErasedCommand, Expose};
 pub use context::{AppContext, Ctx};
+pub use gateway::{GatewayClient, GatewayConfig, GatewayError, ToolInfo};
 pub use types::{CommandResult, ErrorCode, ErrorInfo, Status};
