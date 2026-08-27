@@ -14,7 +14,7 @@ The backend is split into two layers:
 | Layer | Path | Role |
 |-------|------|------|
 | **engine** | `crates/engine/` | All real backend logic. No transport dependency - runs in the CLI, the HTTP API, and tests. |
-| **appctl** | `crates/cli/` | The `appctl` binary. Drives `engine` over the CLI (`call`/`probe`/`doctor`/`run-scenario`) and the axum HTTP API (`serve`), gated behind the `cli` / `http-api` cargo features. |
+| **sealg** | `crates/cli/` | The `sealg` binary. Drives `engine` over the CLI (`call`/`probe`/`doctor`/`run-scenario`) and the axum HTTP API (`serve`), gated behind the `cli` / `http-api` cargo features. |
 
 ### Design Principles (engine)
 
@@ -36,7 +36,7 @@ CLI args, the HTTP body schema, and the future MCP tool schema) and
 **self-register at link time** via `register_command!` - there is no
 hand-maintained registration list.
 
-The fastest path is the scaffolder: `appctl new <name>` (or `make new
+The fastest path is the scaffolder: `sealg new <name>` (or `make new
 name=<name>`) generates the file below from `templates/command.rs.tpl` and
 inserts the `mod <name>;` line for you. To do it by hand:
 
@@ -86,16 +86,16 @@ register_command!(MyCommand);
 
 2. Declare the module in `crates/engine/src/commands/mod.rs` (`mod my_command;`).
    The `register_command!` line does the rest - `CommandRegistry::new()` collects
-   it automatically. (`appctl new` inserts this line for you.)
+   it automatically. (`sealg new` inserts this line for you.)
 
 3. No transport change is needed: the HTTP `POST /api/v1/commands/:name` route is
    auto-derived from the registry, and the CLI `call` path dispatches by name.
 
-4. Smoke-test headlessly with `appctl`:
+4. Smoke-test headlessly with `sealg`:
 
 ```bash
-cargo build -p appctl
-appctl call my_command --args '{"key": "value"}' --json
+cargo build -p sealg
+sealg call my_command --args '{"key": "value"}' --json
 ```
 
 - Deserialize failures map to `INVALID_INPUT` automatically. Return typed
@@ -124,7 +124,7 @@ impl NetworkOps for OfflineNetwork {
 }
 ```
 
-Inject via `AppContext` - `AppContext::default()` wires the real platform capabilities (used by `appctl`); pass stub implementations to `AppContext::new(fs, network)` to run a command against fakes in tests.
+Inject via `AppContext` - `AppContext::default()` wires the real platform capabilities (used by `sealg`); pass stub implementations to `AppContext::new(fs, network)` to run a command against fakes in tests.
 
 ## Configuration
 
@@ -141,27 +141,27 @@ println!("Model: {}", config.default_llm.default_model);
 `crates/engine` stays config-agnostic - do not import `app-config` there unless a
 command genuinely needs config; prefer passing values in via the input struct.
 
-## Testing with appctl
+## Testing with sealg
 
-The `appctl` CLI drives `engine` without a running HTTP server:
+The `sealg` CLI drives `engine` without a running HTTP server:
 
 ```bash
 # Build
-cargo build -p appctl
+cargo build -p sealg
 
 # Diagnostics
-appctl doctor --json
+sealg doctor --json
 
 # Call a command
-appctl call ping --json
-appctl call read_file --args '{"path": "/etc/hostname"}' --json
+sealg call ping --json
+sealg call read_file --args '{"path": "/etc/hostname"}' --json
 
 # Run a capability probe
-appctl probe filesystem --json
-appctl probe network --json
+sealg probe filesystem --json
+sealg probe network --json
 
 # Run a YAML scenario
-appctl run-scenario scenario.yaml --json
+sealg run-scenario scenario.yaml --json
 ```
 
 Write scenario files for regression tests:
@@ -200,5 +200,5 @@ Error codes: `INVALID_INPUT`, `UNSUPPORTED`, `UNIMPLEMENTED`, `DEPENDENCY_MISSIN
 - [ ] `cargo fmt` applied
 - [ ] `cargo clippy` passes (no warnings)
 - [ ] `cargo test` passes
-- [ ] New command smoke-tested with `appctl call <cmd> --json`
+- [ ] New command smoke-tested with `sealg call <cmd> --json`
 - [ ] `engine` crate has no transport imports (no CLI/axum/HTTP types)

@@ -2,7 +2,7 @@
 name = "engine"
 version = "0.1.0"
 edition = "2021"
-description = "Transport-agnostic service core for the Rust server template – shared across CLI, HTTP API, and MCP"
+description = "Transport-agnostic service core for SealGate, shared across the CLI and future MCP transport"
 license = "MIT"
 
 [dependencies]

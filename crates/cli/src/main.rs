@@ -1,23 +1,18 @@
-//! `appctl` – the Rust server template's unified CLI + HTTP API binary.
+//! `sealg` – the SealGate command-line interface.
 //!
-//! Runs the shared `engine` command registry over multiple transports:
-//! `serve` (axum HTTP API) plus the CLI diagnostics (`call`, `probe`, `doctor`,
-//! `run-scenario`). `init` onboards the template into a real project, `new`
-//! scaffolds a fresh engine command, and `mcp` is a stub for the future MCP
-//! transport. Transports are cargo features (`cli`, `http-api`) so `appctl
-//! init` can prune a surface and still leave a compiling project.
+//! Runs the shared `engine` command registry over the CLI diagnostics
+//! (`call`, `probe`, `doctor`, `run-scenario`). `new` scaffolds a fresh engine
+//! command, and `mcp` is a stub for the future MCP transport.
 
 #[cfg(feature = "cli")]
 mod diagnostics;
 mod init;
 mod mcp;
 mod scaffold;
-#[cfg(feature = "http-api")]
-mod serve_http;
 
 use clap::{Parser, Subcommand};
 
-#[cfg(any(feature = "cli", feature = "http-api"))]
+#[cfg(feature = "cli")]
 use engine::{AppContext, CommandRegistry};
 #[cfg(feature = "cli")]
 use std::path::PathBuf;
@@ -26,9 +21,9 @@ use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(
-    name = "appctl",
+    name = "sealg",
     version,
-    about = "CLI + HTTP API harness for the Rust server template"
+    about = "Command-line interface for SealGate, the agentic data firewall"
 )]
 struct Cli {
     #[command(subcommand)]
@@ -104,17 +99,6 @@ enum Commands {
         #[arg(long)]
         interactive: bool,
     },
-
-    /// Start the HTTP API server (axum). Host/port default from config.
-    #[cfg(feature = "http-api")]
-    Serve {
-        /// Bind host (overrides config `server.host`).
-        #[arg(long)]
-        host: Option<String>,
-        /// Bind port (overrides config `server.port`).
-        #[arg(long)]
-        port: Option<u16>,
-    },
 }
 
 // Main
@@ -180,27 +164,6 @@ async fn main() {
             let registry = CommandRegistry::new();
             diagnostics::cmd_run_scenario(&file, json, interactive, artifacts, &ctx, &registry)
                 .await
-        }
-        #[cfg(feature = "http-api")]
-        Commands::Serve { host, port } => {
-            let ctx = AppContext::default();
-            let registry = CommandRegistry::new();
-            let config = match app_config::try_get_config() {
-                Ok(c) => c,
-                Err(e) => {
-                    eprintln!("error: failed to load configuration: {e}");
-                    eprintln!(
-                        "hint: ensure global_config.yaml exists, or set APP_CONFIG_PATH \
-                         to point at your config file."
-                    );
-                    std::process::exit(1);
-                }
-            };
-            let cfg = &config.server;
-            let host = host.unwrap_or_else(|| cfg.host.clone());
-            let port = port.unwrap_or(cfg.port);
-            let settings = serve_http::ServeSettings::from_config(cfg);
-            serve_http::run_server(host, port, ctx, registry, settings).await
         }
     }
 }

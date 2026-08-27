@@ -1,4 +1,4 @@
-//! Engine crate – the shared service core for the Rust server template.
+//! Engine crate – the shared service core for SealGate.
 //!
 //! This crate contains all real backend logic and OS integrations behind
 //! traits. It has NO transport dependency (no CLI, axum, or HTTP types), so the

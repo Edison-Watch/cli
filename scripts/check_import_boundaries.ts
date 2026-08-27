@@ -4,7 +4,7 @@
  *
  * The platform-agnostic core crate `crates/engine` must have NO dependency on
  * any transport crate. Transports (CLI + HTTP API) live in `crates/cli`
- * (package `appctl`); the engine is meant to be reusable by every transport, so
+ * (package `sealg`); the engine is meant to be reusable by every transport, so
  * a dependency edge from engine -> a transport crate would invert the layering
  * described in CLAUDE.md ("The `engine` core has no transport dependency").
  *
@@ -34,7 +34,7 @@ const CORE_CRATE = "crates/engine";
 // Forbidden transport PACKAGE names. Matched against real package names only
 // (dependency key, `package = "X"` rename, or subtable key). Do NOT list bare
 // directory names here -- an unrelated crate named `cli` must not trip the gate.
-const FORBIDDEN_PACKAGES: string[] = ["appctl"];
+const FORBIDDEN_PACKAGES: string[] = ["sealg"];
 
 // Final path segments that identify a transport crate directory. Any
 // `path = "..."` whose last segment matches is a violation regardless of key.
@@ -151,7 +151,7 @@ function checkManifest(manifestPath: string): Violation[] {
 		}
 		if (!inDepTable) continue;
 
-		// Direct dependency key: `appctl = ...`, `appctl.workspace = ...`.
+		// Direct dependency key: `sealg = ...`, `sealg.workspace = ...`.
 		const key = line.match(DEP_KEY_RE);
 		if (key && forbiddenPackages.has(key[1])) {
 			violations.push({
@@ -162,7 +162,7 @@ function checkManifest(manifestPath: string): Violation[] {
 			continue;
 		}
 
-		// Inline-table rename: `ui = { package = "appctl", version = "..." }`.
+		// Inline-table rename: `ui = { package = "sealg", version = "..." }`.
 		const alias = packageAlias(line);
 		if (alias && forbiddenPackages.has(alias)) {
 			violations.push({

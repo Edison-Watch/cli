@@ -30,28 +30,17 @@ help: ## Show this help message
 		}' $(MAKEFILE_LIST)
 
 ########################################################
-# App (server + CLI)
+# App (CLI)
 ########################################################
 
 ### App
-.PHONY: run build build-release dev
-
-run: ## Run the HTTP API server (appctl serve)
-	cargo run -p appctl -- serve
+.PHONY: build build-release
 
 build: ## Build the whole workspace (debug)
 	cargo build --workspace
 
 build-release: ## Build the whole workspace (release)
 	cargo build --workspace --release
-
-dev: ## Run the optional frontend in development mode
-	bun run dev
-
-docs: ## Run docs with bun
-	@echo "$(GREEN)📚Running docs...$(RESET)"
-	@cd docs && bun run dev
-	@echo "$(GREEN)✅ Docs run completed.$(RESET)"
 
 
 ########################################################
@@ -79,10 +68,10 @@ setup: ## Set up dev environment from scratch (installs deps, copies .env, check
 	else \
 		echo "$(GREEN)✅ .env already exists$(RESET)"; \
 	fi
-	@echo "$(GREEN)✅ Setup complete. Run 'make run' to start the server.$(RESET)"
+	@echo "$(GREEN)✅ Setup complete. Run 'cargo run -p sealg -- --help' to get started.$(RESET)"
 
-init: ## Onboard the template into a real project (appctl init). Bare = wizard; PROFILE=/CONFIG=/DRY_RUN=1/ARGS= for headless.
-	@cargo run -q -p appctl -- init \
+init: ## Onboard the template into a real project (sealg init). Bare = wizard; PROFILE=/CONFIG=/DRY_RUN=1/ARGS= for headless.
+	@cargo run -q -p sealg -- init \
 		$(if $(PROFILE),--profile $(PROFILE),) \
 		$(if $(CONFIG),--config $(CONFIG),) \
 		$(if $(DRY_RUN),--dry-run,) \
@@ -94,7 +83,7 @@ new: ## Scaffold a new engine command (usage: make new name=fetch_url [descripti
 		echo "Usage: make new name=<command_name> [description=\"...\"]"; \
 		exit 1; \
 	fi
-	@cargo run -q -p appctl -- new $(name) $(if $(description),--description "$(description)",)
+	@cargo run -q -p sealg -- new $(name) $(if $(description),--description "$(description)",)
 
 ### Asset Generation
 .PHONY: banner logo
@@ -184,8 +173,7 @@ link-check: ## Check for broken links in markdown files
 	@if command -v lychee > /dev/null 2>&1; then \
 		lychee .; \
 	else \
-		echo "$(YELLOW)⚠️ lychee not installed. Falling back to docs lint script...$(RESET)"; \
-		cd docs && bun run lint:links; \
+		echo "$(YELLOW)⚠️ lychee not installed. Skipping link check.$(RESET)"; \
 	fi
 	@echo "$(GREEN)✅ Link check completed.$(RESET)"
 
