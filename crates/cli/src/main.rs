@@ -35,7 +35,7 @@ enum Commands {
     /// Onboard this template into a real project (rename, prune, .env).
     Init(init::InitArgs),
 
-    /// (stub) Serve the registry over MCP - designed-for, not yet implemented.
+    /// (stub) Expose the gateway over a local MCP transport - not yet implemented.
     Mcp,
 
     /// Collect environment facts and emit an env summary.
