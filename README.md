@@ -45,26 +45,26 @@ and enforcement live.
 ## Architecture
 
 ```
-        ┌─────────────────────────────────────────────────────────┐
-        │  TRANSPORT  (crates/cli - one binary `sealg`)           │
-        │                                                         │
-        │   sealg list                         tools/list        │
-        │   sealg call <tool> --args '{...}'   tools/call        │
-        │   sealg doctor                       local env facts   │
-        │   sealg mcp (stub)                                     │
-        └───────────────────────────┬─────────────────────────────┘
-                                     │  engine::gateway (MCP over HTTP)
-        ┌────────────────────────────▼─────────────────────────────┐
-        │  crates/engine  - the service core (no transport deps)    │
-        │    GatewayConfig  - coordinates resolved from the env     │
-        │    GatewayClient  - initialize / tools/list / tools/call  │
-        │    doctor / types - env facts + stable result contract    │
-        └───────────────────────────┬─────────────────────────────┘
-                                     │  HTTPS
-        ┌────────────────────────────▼─────────────────────────────┐
-        │  SealGate gateway  - per-user MCP endpoint; owns ALL      │
-        │  policy, trifecta, and PII enforcement                    │
-        └───────────────────────────────────────────────────────────┘
+        ┌──────────────────────────────────────────────────────────┐
+        │  TRANSPORT  (crates/cli - one binary `sealg`)            │
+        │                                                          │
+        │   sealg list                         tools/list          │
+        │   sealg call <tool> --args '{...}'   tools/call          │
+        │   sealg doctor                       local env facts     │
+        │   sealg mcp (stub)                                       │
+        └───────────────────────────┬──────────────────────────────┘
+                                    │  engine::gateway (MCP over HTTP)
+        ┌───────────────────────────▼──────────────────────────────┐
+        │  crates/engine  - the service core (no transport deps)   │
+        │    GatewayConfig  - coordinates resolved from the env    │
+        │    GatewayClient  - initialize / tools/list / tools/call │
+        │    doctor / types - env facts + stable result contract   │
+        └───────────────────────────┬──────────────────────────────┘
+                                    │  HTTPS
+        ┌───────────────────────────▼──────────────────────────────┐
+        │  SealGate gateway  - per-user MCP endpoint; owns ALL     │
+        │  policy, trifecta, and PII enforcement                   │
+        └──────────────────────────────────────────────────────────┘
 ```
 
 - `crates/engine/` - the gateway client + config, `doctor` env facts, and the
