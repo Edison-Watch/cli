@@ -3,16 +3,19 @@
 //! `sealg` speaks the small slice of MCP it needs — `initialize`, `tools/list`,
 //! `tools/call` — directly to the gateway's `/mcp/{api_key}/` endpoint. No
 //! `rmcp` dependency: the binary stays thin and cold-starts fast (see the
-//! design doc §5A). Transport: MCP Streamable HTTP, 2026-07-28.
-//! <https://modelcontextprotocol.io/specification/2026-07-28>
+//! design doc §5A). Transport: MCP Streamable HTTP, protocol `2025-06-18`
+//! (the version the gateway's FastMCP server accepts).
+//! <https://modelcontextprotocol.io/specification/2025-06-18>
 
 use super::config::{GatewayConfig, CONVERSATION_ID_HEADER, SECRET_KEY_HEADER};
 use serde_json::{json, Value};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
-/// Protocol version `sealg` advertises in `initialize`.
-pub const PROTOCOL_VERSION: &str = "2026-07-28";
+/// Protocol version `sealg` advertises in `initialize`. Must be a version the
+/// gateway's MCP server (FastMCP) actually supports — it rejects unknown
+/// versions with JSON-RPC -32600. `2025-06-18` is the current stable MCP spec.
+pub const PROTOCOL_VERSION: &str = "2025-06-18";
 
 /// A tool as advertised by the gateway's `tools/list`.
 #[derive(Debug, Clone)]
