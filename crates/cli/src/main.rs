@@ -2,13 +2,11 @@
 //!
 //! A thin MCP client to the SealGate gateway. `list` and `call` forward
 //! `tools/list` / `tools/call` to the per-user gateway endpoint (all policy and
-//! enforcement live in the gateway). `doctor` reports local environment facts,
-//! and `mcp` is a stub for the future MCP transport.
+//! enforcement live in the gateway). `doctor` reports local environment facts.
 
 #[cfg(feature = "cli")]
 mod diagnostics;
 mod gateway_cmd;
-mod mcp;
 
 use clap::{Parser, Subcommand};
 
@@ -30,9 +28,6 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// (stub) Expose the gateway over a local MCP transport - not yet implemented.
-    Mcp,
-
     /// Collect environment facts and emit an env summary.
     #[cfg(feature = "cli")]
     Doctor {
@@ -83,7 +78,6 @@ async fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Mcp => mcp::run(),
         #[cfg(feature = "cli")]
         Commands::Doctor { json, out } => diagnostics::cmd_doctor(json, out).await,
         Commands::List { json, gateway_url } => gateway_cmd::cmd_list(json, gateway_url).await,

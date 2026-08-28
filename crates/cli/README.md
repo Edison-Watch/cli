@@ -2,8 +2,7 @@
 
 `sealg` is a thin MCP client to the SealGate gateway. `list` and `call` forward
 `tools/list` / `tools/call` to the per-user gateway endpoint, where the gateway
-applies all policy and enforcement. `doctor` reports local environment facts,
-and `mcp` is a stub for the future MCP transport.
+applies all policy and enforcement. `doctor` reports local environment facts.
 
 ## Build
 
@@ -61,10 +60,6 @@ sealg doctor --json
 # Write result to file
 sealg doctor --json --out /tmp/env.json
 ```
-
-### mcp
-
-Stub for the future MCP transport - prints a notice and exits (`EX_UNAVAILABLE`).
 
 ## Exit Codes
 
