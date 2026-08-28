@@ -48,7 +48,7 @@ build-release: ## Build the whole workspace (release)
 ########################################################
 
 ### Initialization
-.PHONY: setup init new banner logo
+.PHONY: setup init banner logo
 
 setup: ## Set up dev environment from scratch (installs deps, copies .env, checks tooling)
 	@echo "$(BLUE)🔧 Setting up dev environment...$(RESET)"
@@ -76,14 +76,6 @@ init: ## Onboard the template into a real project (sealg init). Bare = wizard; P
 		$(if $(CONFIG),--config $(CONFIG),) \
 		$(if $(DRY_RUN),--dry-run,) \
 		$(ARGS)
-
-new: ## Scaffold a new engine command (usage: make new name=fetch_url [description="..."])
-	@if [ -z "$(name)" ]; then \
-		echo "$(RED)Error: 'name' is required$(RESET)"; \
-		echo "Usage: make new name=<command_name> [description=\"...\"]"; \
-		exit 1; \
-	fi
-	@cargo run -q -p sealg -- new $(name) $(if $(description),--description "$(description)",)
 
 ### Asset Generation
 .PHONY: banner logo

@@ -2,10 +2,11 @@ This file provides guidance to AI agents working with code in this repository.
 
 ## Project Overview
 
-SealGate's command-line interface. Business logic is written **once** as a typed
-async `Command` in the `engine` crate and exposed through the `sealg` binary (and,
-later, an MCP transport). The `engine` core has no transport dependency;
-transports live in `crates/cli` behind cargo features.
+SealGate's command-line interface. `sealg` is a thin MCP client to the SealGate
+gateway: `list` and `call` forward `tools/list` / `tools/call` to the per-user
+gateway endpoint, where all policy and enforcement live. The `engine` core holds
+the gateway client/config plus local `doctor` diagnostics and has no transport
+dependency.
 **Before any other work in this repo, enable prek:** `bun add -g prek && prek install`. Hooks are defined in `prek.toml`.
 
 ## Common Commands
@@ -13,14 +14,14 @@ transports live in `crates/cli` behind cargo features.
 ```bash
 cargo test --workspace  # Run Rust tests
 cargo clippy --workspace --all-targets -- -D warnings
-sealg call ping --json  # Invoke a command headlessly
-make new name=fetch_url # Scaffold a new engine command
+sealg list              # List the user's tools from the gateway
+sealg call <tool> --args '{...}'  # Call a gateway tool via tools/call
 ```
 
 ## Architecture
 
-- **crates/engine/** - typed async `Command` registry with `inventory`
-  self-registration; per-request `Ctx`; capability traits. No transport deps.
+- **crates/engine/** - `GatewayConfig` (env-resolved coordinates) + `GatewayClient`
+  (hand-rolled MCP-over-HTTP client), plus `doctor` env facts. No transport deps.
 - **crates/cli/** - the `sealg` binary; the `cli` surface is a cargo feature.
 - **crates/config/** - crate `app-config`; `AppConfig` (secrets) vs sanitized
   `FrontendConfig`. The sanitizer is a security boundary.

@@ -27,14 +27,15 @@
 
 ## Key Features
 
-Business logic is written **once** as a typed async `Command` in the `engine`
-crate and exposed through the `sealg` binary (with an MCP transport planned).
+`sealg` is a thin MCP client to the SealGate gateway: `list` and `call` forward
+`tools/list` / `tools/call` to the per-user gateway endpoint, where all policy
+and enforcement live.
 
 | Feature | Tech Stack |
 |---------|:----------:|
-| **Core** | `engine` crate - typed async `Command` registry (no transport deps) |
-| **CLI** | `sealg` binary - `call` / `doctor` / `probe` / `run-scenario` |
-| **Contract** | `schemars` JSON Schema shared across the CLI and future MCP |
+| **Core** | `engine` crate - env-resolved gateway config + hand-rolled MCP client (no transport deps) |
+| **CLI** | `sealg` binary - `list` / `call` / `doctor` / `init` |
+| **Transport** | MCP Streamable HTTP to the gateway's `/mcp/{api_key}/` endpoint |
 | **Config** | `app-config` crate (YAML + `APP__` env overrides + sanitizer) |
 | **Logging** | `tracing` + redaction layer |
 | **Packaging** | `cargo-dist` (binaries + installers) |
@@ -45,30 +46,31 @@ crate and exposed through the `sealg` binary (with an MCP transport planned).
 
 ```
         ┌─────────────────────────────────────────────────────────┐
-        │  TRANSPORT  (crates/cli - one binary `sealg`)            │
+        │  TRANSPORT  (crates/cli - one binary `sealg`)           │
         │                                                         │
-        │   sealg call <cmd> --args '{...}'   one-shot JSON I/O   │
-        │   sealg doctor | probe | run-scenario                  │
-        │   sealg mcp                          (stub - planned)   │
+        │   sealg list                         tools/list        │
+        │   sealg call <tool> --args '{...}'   tools/call        │
+        │   sealg doctor                       local env facts   │
+        │   sealg init | mcp (stub)                              │
         └───────────────────────────┬─────────────────────────────┘
-                                     │  same registry + typed contract
+                                     │  engine::gateway (MCP over HTTP)
         ┌────────────────────────────▼─────────────────────────────┐
         │  crates/engine  - the service core (no transport deps)    │
-        │    Command trait:  Input: JsonSchema + Deserialize        │
-        │                    Output: JsonSchema + Serialize         │
-        │    CommandRegistry (inventory self-registration)          │
-        │    Ctx (per-request): fs / network capabilities           │
+        │    GatewayConfig  - coordinates resolved from the env     │
+        │    GatewayClient  - initialize / tools/list / tools/call  │
+        │    doctor / types - env facts + stable result contract    │
         └───────────────────────────┬─────────────────────────────┘
-                                     │
+                                     │  HTTPS
         ┌────────────────────────────▼─────────────────────────────┐
-        │  crates/config (app-config) - AppConfig / FrontendConfig  │
-        │                 YAML + APP__ env overrides + sanitizer    │
+        │  SealGate gateway  - per-user MCP endpoint; owns ALL      │
+        │  policy, trifecta, and PII enforcement                    │
         └───────────────────────────────────────────────────────────┘
 ```
 
-- `crates/engine/` - all real logic; a typed, async `Command` registry with
-  self-registration (`inventory`). No transport dependency.
-- `crates/cli/` - the `sealg` binary. The `cli` surface is a cargo feature.
+- `crates/engine/` - the gateway client + config, `doctor` env facts, and the
+  shared result contract. No transport dependency.
+- `crates/cli/` - the `sealg` binary. The `cli` surface (`doctor`) is a cargo
+  feature.
 - `crates/config/` - `AppConfig` (with secrets) vs the sanitized
   `FrontendConfig`. The sanitizer is a security boundary.
 - `crates/assetgen/` - `asset-gen` binary for `make banner` / `make logo`.
@@ -80,13 +82,14 @@ crate and exposed through the `sealg` binary (with an MCP transport planned).
 cargo build --workspace
 cargo test --workspace
 
-# 2. Call a command headlessly
-cargo run -p sealg -- call ping --json
-cargo run -p sealg -- call read_file --args '{"path": "/etc/hostname"}' --json
-```
+# 2. Point at a gateway and drive it (coordinates come from the environment)
+export SEALGATE_URL=http://localhost:3000
+cargo run -p sealg -- list
+cargo run -p sealg -- call some_tool --args '{"query": "hello"}'
 
-Scaffold a new command with `make new name=fetch_url` (or `sealg new
-fetch_url`) - it self-registers, so it's immediately callable over the CLI.
+# ...or override the gateway per-invocation
+cargo run -p sealg -- list --gateway-url https://dashboard.sealgate.ai
+```
 
 ## Configuration
 
