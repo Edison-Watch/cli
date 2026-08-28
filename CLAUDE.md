@@ -30,6 +30,19 @@ sealg call <tool> --args '{...}'  # Call a gateway tool via tools/call
 
 Enforced by Biome (TS) and `cargo fmt` + Clippy (Rust). See `biome.json`.
 
+## Configuration Pattern
+
+`sealg` is a thin, stateless client: all configuration is resolved from the
+**environment** (no config files), so the binary drops into any sandbox. The
+gateway coordinates are read once at startup by `GatewayConfig::from_env`
+(`crates/engine/src/gateway/config.rs`): `SEALGATE_URL` (gateway origin;
+defaults to localhost), `SEALGATE_API_KEY` (optional — embedded in the
+`/mcp/{key}/` path, else auth is injected upstream), `SEALGATE_SECRET_KEY`,
+`SEALGATE_CONVERSATION_ID` (falling back to Centaur's `CENTAUR_THREAD_KEY`), and
+a MITM CA bundle from `SSL_CERT_FILE`/`REQUESTS_CA_BUNDLE`/`NODE_EXTRA_CA_CERTS`.
+The `--gateway-url` flag on `list`/`call` overrides `SEALGATE_URL` per
+invocation (`from_env_with_url_override`).
+
 ## Commit Message Convention
 
 Use emoji prefixes indicating change type and magnitude (multiple emojis = 5+ files):
