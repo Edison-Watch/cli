@@ -43,14 +43,20 @@ async fn run_list(json_out: bool) -> Result<(), GatewayError> {
 }
 
 /// `sealg gw-call <tool> [--args '<json>'] [--json]` — call one gateway tool.
-pub async fn cmd_call(tool: &str, args: &str, json_out: bool) {
-    if let Err(e) = run_call(tool, args, json_out).await {
-        eprintln!("error: {e}");
-        std::process::exit(1);
+pub async fn cmd_call(tool: &str, args: &str) {
+    match run_call(tool, args).await {
+        Ok(exit_code) => std::process::exit(exit_code),
+        Err(e) => {
+            eprintln!("error: {e}");
+            std::process::exit(1);
+        }
     }
 }
 
-async fn run_call(tool: &str, args: &str, _json_out: bool) -> Result<(), GatewayError> {
+/// Returns the process exit code: `0` on a normal result, non-zero when the
+/// gateway returns an MCP tool error (`isError: true`) — the result is still
+/// printed so the caller sees the error content.
+async fn run_call(tool: &str, args: &str) -> Result<i32, GatewayError> {
     let arguments: Value = serde_json::from_str(args)
         .map_err(|e| GatewayError::Config(format!("invalid --args JSON: {e}")))?;
 
@@ -62,5 +68,9 @@ async fn run_call(tool: &str, args: &str, _json_out: bool) -> Result<(), Gateway
         "{}",
         serde_json::to_string_pretty(&result).unwrap_or_else(|_| result.to_string())
     );
-    Ok(())
+
+    // Mirror the MCP tool-call response: an `isError: true` result is a failed
+    // call and must not exit 0.
+    let is_error = result.get("isError").and_then(Value::as_bool) == Some(true);
+    Ok(if is_error { 6 } else { 0 })
 }

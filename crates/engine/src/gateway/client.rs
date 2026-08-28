@@ -14,7 +14,8 @@ use std::time::Duration;
 
 /// Protocol version `sealg` advertises in `initialize`. Must be a version the
 /// gateway's MCP server (FastMCP) actually supports — it rejects unknown
-/// versions with JSON-RPC -32600. `2025-06-18` is the current stable MCP spec.
+/// versions with JSON-RPC -32600. `2025-06-18` is the latest version the
+/// gateway's FastMCP server accepts.
 pub const PROTOCOL_VERSION: &str = "2025-06-18";
 
 /// A tool as advertised by the gateway's `tools/list`.
@@ -220,8 +221,24 @@ impl GatewayClient {
         if e.is_timeout() {
             GatewayError::Timeout
         } else {
-            GatewayError::Network(format!("POST {}: {}", self.url, e))
+            GatewayError::Network(format!("POST {}: {}", self.display_url(), e))
         }
+    }
+
+    /// The endpoint URL with the API-key path segment redacted, for safe
+    /// logging. The key rides in the `/mcp/{key}/` path, so an un-redacted URL
+    /// in an error message would leak the secret to stderr / logs.
+    fn display_url(&self) -> String {
+        redact_url(&self.url, self.cfg.api_key.as_deref())
+    }
+}
+
+/// Replace the API key wherever it appears in `url` with `***`. Pure, so the
+/// redaction guarantee is unit-tested without a live client.
+fn redact_url(url: &str, api_key: Option<&str>) -> String {
+    match api_key {
+        Some(key) if !key.is_empty() => url.replace(key, "***"),
+        _ => url.to_string(),
     }
 }
 
@@ -350,5 +367,18 @@ mod tests {
     fn invalid_json_is_protocol_error() {
         let err = extract_rpc_result("application/json", "not json", 1).unwrap_err();
         assert!(matches!(err, GatewayError::Protocol(_)));
+    }
+
+    #[test]
+    fn redact_url_hides_the_api_key() {
+        let url = "https://gw.example/mcp/ew_live_SECRET/";
+        let out = redact_url(url, Some("ew_live_SECRET"));
+        assert!(!out.contains("ew_live_SECRET"), "key leaked: {out}");
+        assert_eq!(out, "https://gw.example/mcp/***/");
+        // No key configured (upstream-injected auth) → URL unchanged.
+        assert_eq!(
+            redact_url("https://gw.example/mcp/", None),
+            "https://gw.example/mcp/"
+        );
     }
 }

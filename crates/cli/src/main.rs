@@ -56,9 +56,6 @@ enum Commands {
         /// JSON arguments object to pass to the tool.
         #[arg(long, default_value = "{}")]
         args: String,
-        /// Output as JSON (result is always emitted as pretty JSON).
-        #[arg(long)]
-        json: bool,
     },
 
     /// Collect environment facts and emit an env summary.
@@ -151,7 +148,7 @@ async fn main() {
         }
         Commands::Mcp => mcp::run(),
         Commands::List { json } => gateway_cmd::cmd_list(json).await,
-        Commands::GwCall { tool, args, json } => gateway_cmd::cmd_call(&tool, &args, json).await,
+        Commands::GwCall { tool, args } => gateway_cmd::cmd_call(&tool, &args).await,
         #[cfg(feature = "cli")]
         Commands::Doctor { json, out } => diagnostics::cmd_doctor(json, out).await,
         #[cfg(feature = "cli")]
