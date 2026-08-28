@@ -13,9 +13,9 @@ use std::time::Duration;
 const TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Exit code when a gateway tool call returns an MCP error (`isError: true`).
-/// Named rather than magic; the value follows the CLI exit-code taxonomy in the
-/// gateway design doc (`dev-docs/architecture/multi-interface-design.md` §5:
-/// 6 = upstream tool error), distinct from 1 (client/transport) and 2 (usage).
+/// Named rather than magic: `6` denotes an upstream tool error, kept distinct
+/// from `1` (client/transport failure) and `2` (clap's usage-error code) so a
+/// caller can tell a failed tool call apart from a CLI or connection failure.
 const EXIT_TOOL_ERROR: i32 = 6;
 
 /// `sealg list [--json]` — list the user's gateway tools.
