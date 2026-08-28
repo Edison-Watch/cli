@@ -63,14 +63,15 @@ impl GatewayConfig {
 
     /// Resolve from the environment, then override the gateway origin with
     /// `url` when it is `Some` and non-blank (the `--gateway-url` flag). A
-    /// trailing `/` is trimmed to match [`from_env`](Self::from_env); a blank
-    /// override is ignored so the env/default value stands.
+    /// trailing `/` is trimmed to match [`from_env`](Self::from_env); an
+    /// override that is blank — or degenerate, like `/` or `///`, which trims to
+    /// empty — is ignored so the env/default value stands.
     pub fn from_env_with_url_override(url: Option<String>) -> Self {
         let mut cfg = Self::from_env();
         if let Some(u) = url {
-            let u = u.trim();
-            if !u.is_empty() {
-                cfg.base_url = u.trim_end_matches('/').to_string();
+            let trimmed = u.trim().trim_end_matches('/');
+            if !trimmed.is_empty() {
+                cfg.base_url = trimmed.to_string();
             }
         }
         cfg
@@ -186,6 +187,16 @@ mod tests {
         assert_eq!(cfg.base_url, base);
         let cfg = GatewayConfig::from_env_with_url_override(None);
         assert_eq!(cfg.base_url, base);
+
+        // A degenerate override that trims to empty (all slashes) is ignored
+        // too, so base_url never becomes empty (which would break mcp_url()).
+        for degenerate in ["/", "///", "  //  "] {
+            let cfg = GatewayConfig::from_env_with_url_override(Some(degenerate.to_string()));
+            assert_eq!(
+                cfg.base_url, base,
+                "override {degenerate:?} should be ignored"
+            );
+        }
     }
 
     #[test]
