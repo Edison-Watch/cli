@@ -6,6 +6,7 @@
 
 #[cfg(feature = "cli")]
 mod diagnostics;
+mod gateway_cmd;
 mod init;
 mod mcp;
 mod scaffold;
@@ -40,6 +41,22 @@ enum Commands {
 
     /// (stub) Serve the registry over MCP - designed-for, not yet implemented.
     Mcp,
+
+    /// List the user's tools from the live SealGate gateway.
+    List {
+        /// Output as a JSON array of {name, description}.
+        #[arg(long)]
+        json: bool,
+    },
+
+    /// Call a tool on the live SealGate gateway.
+    GwCall {
+        /// Tool name as advertised by `sealg list`.
+        tool: String,
+        /// JSON arguments object to pass to the tool.
+        #[arg(long, default_value = "{}")]
+        args: String,
+    },
 
     /// Collect environment facts and emit an env summary.
     #[cfg(feature = "cli")]
@@ -130,6 +147,8 @@ async fn main() {
             }
         }
         Commands::Mcp => mcp::run(),
+        Commands::List { json } => gateway_cmd::cmd_list(json).await,
+        Commands::GwCall { tool, args } => gateway_cmd::cmd_call(&tool, &args).await,
         #[cfg(feature = "cli")]
         Commands::Doctor { json, out } => diagnostics::cmd_doctor(json, out).await,
         #[cfg(feature = "cli")]

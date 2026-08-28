@@ -3,16 +3,20 @@
 //! `sealg` speaks the small slice of MCP it needs — `initialize`, `tools/list`,
 //! `tools/call` — directly to the gateway's `/mcp/{api_key}/` endpoint. No
 //! `rmcp` dependency: the binary stays thin and cold-starts fast (see the
-//! design doc §5A). Transport: MCP Streamable HTTP, 2026-07-28.
-//! <https://modelcontextprotocol.io/specification/2026-07-28>
+//! design doc §5A). Transport: MCP Streamable HTTP, protocol `2025-06-18`
+//! (the version the gateway's FastMCP server accepts).
+//! <https://modelcontextprotocol.io/specification/2025-06-18>
 
 use super::config::{GatewayConfig, CONVERSATION_ID_HEADER, SECRET_KEY_HEADER};
 use serde_json::{json, Value};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
-/// Protocol version `sealg` advertises in `initialize`.
-pub const PROTOCOL_VERSION: &str = "2026-07-28";
+/// Protocol version `sealg` advertises in `initialize`. Must be a version the
+/// gateway's MCP server (FastMCP) actually supports — it rejects unknown
+/// versions with JSON-RPC -32600. `2025-06-18` is the latest version the
+/// gateway's FastMCP server accepts.
+pub const PROTOCOL_VERSION: &str = "2025-06-18";
 
 /// A tool as advertised by the gateway's `tools/list`.
 #[derive(Debug, Clone)]
@@ -217,8 +221,29 @@ impl GatewayClient {
         if e.is_timeout() {
             GatewayError::Timeout
         } else {
-            GatewayError::Network(format!("POST {}: {}", self.url, e))
+            // `reqwest::Error`'s Display embeds the original request URL, which
+            // carries the API key in its `/mcp/{key}/` path — strip it with
+            // `without_url()` so only our already-redacted URL is shown.
+            GatewayError::Network(format!("POST {}: {}", self.display_url(), e.without_url()))
         }
+    }
+
+    /// The endpoint URL with the API-key path segment redacted, for safe
+    /// logging. The key rides in the `/mcp/{key}/` path, so an un-redacted URL
+    /// in an error message would leak the secret to stderr / logs.
+    fn display_url(&self) -> String {
+        redact_url(&self.url, self.cfg.api_key.as_deref())
+    }
+}
+
+/// Redact the API key from `url` by replacing the `/{key}/` path segment with
+/// `/***/`. Targeting the delimited segment (rather than a blanket replace of
+/// the key substring) avoids corrupting an unrelated host/path that happens to
+/// contain the key text. Pure, so the redaction guarantee is unit-tested.
+fn redact_url(url: &str, api_key: Option<&str>) -> String {
+    match api_key {
+        Some(key) if !key.is_empty() => url.replace(&format!("/{key}/"), "/***/"),
+        _ => url.to_string(),
     }
 }
 
@@ -347,5 +372,24 @@ mod tests {
     fn invalid_json_is_protocol_error() {
         let err = extract_rpc_result("application/json", "not json", 1).unwrap_err();
         assert!(matches!(err, GatewayError::Protocol(_)));
+    }
+
+    #[test]
+    fn redact_url_hides_the_api_key() {
+        let url = "https://gw.example/mcp/ew_live_SECRET/";
+        let out = redact_url(url, Some("ew_live_SECRET"));
+        assert!(!out.contains("ew_live_SECRET"), "key leaked: {out}");
+        assert_eq!(out, "https://gw.example/mcp/***/");
+        // No key configured (upstream-injected auth) → URL unchanged.
+        assert_eq!(
+            redact_url("https://gw.example/mcp/", None),
+            "https://gw.example/mcp/"
+        );
+        // Only the `/{key}/` path segment is redacted: a host containing the
+        // key text is left intact (no blanket replace-all corruption).
+        assert_eq!(
+            redact_url("https://abc.example/mcp/abc/", Some("abc")),
+            "https://abc.example/mcp/***/"
+        );
     }
 }
