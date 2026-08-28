@@ -12,7 +12,6 @@
   <a href="#key-features">Key Features</a> •
   <a href="#architecture">Architecture</a> •
   <a href="#quick-start">Quick Start</a> •
-  <a href="#configuration">Configuration</a> •
   <a href="#agent-skills">Agent Skills</a> •
   <a href="#credits">Credits</a>
 </p>
@@ -36,7 +35,6 @@ and enforcement live.
 | **Core** | `engine` crate - env-resolved gateway config + hand-rolled MCP client (no transport deps) |
 | **CLI** | `sealg` binary - `list` / `call` / `doctor` |
 | **Transport** | MCP Streamable HTTP to the gateway's `/mcp/{api_key}/` endpoint |
-| **Config** | `app-config` crate (YAML + `APP__` env overrides + sanitizer) |
 | **Logging** | `tracing` + redaction layer |
 | **Packaging** | `cargo-dist` (binaries + installers) |
 | **Package Manager** | Bun |
@@ -70,9 +68,6 @@ and enforcement live.
   shared result contract. No transport dependency.
 - `crates/cli/` - the `sealg` binary. The `cli` surface (`doctor`) is a cargo
   feature.
-- `crates/config/` - `AppConfig` (with secrets) vs the sanitized
-  `FrontendConfig`. The sanitizer is a security boundary.
-- `crates/assetgen/` - `asset-gen` binary for `make banner` / `make logo`.
 
 ## Quick Start
 
@@ -89,17 +84,6 @@ cargo run -p sealg -- call some_tool --args '{"query": "hello"}'
 # ...or override the gateway per-invocation
 cargo run -p sealg -- list --gateway-url https://dashboard.sealgate.ai
 ```
-
-## Configuration
-
-Configuration is handled in Rust.
-
-- `app_config::get_config()` (full) / `app_config::get_frontend_config()` (sanitized).
-
-### Environment Variables
-Prefix variables with `APP__` to override YAML settings (e.g.,
-`APP__MODEL_NAME=gpt-4`). Point a deployed binary at its config file with
-`APP_CONFIG_PATH`.
 
 ## Agent Skills
 

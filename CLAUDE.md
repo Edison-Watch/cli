@@ -23,25 +23,12 @@ sealg call <tool> --args '{...}'  # Call a gateway tool via tools/call
 - **crates/engine/** - `GatewayConfig` (env-resolved coordinates) + `GatewayClient`
   (hand-rolled MCP-over-HTTP client), plus `doctor` env facts. No transport deps.
 - **crates/cli/** - the `sealg` binary; the `cli` surface is a cargo feature.
-- **crates/config/** - crate `app-config`; `AppConfig` (secrets) vs sanitized
-  `FrontendConfig`. The sanitizer is a security boundary.
 
 > **Making backend changes?** Use the `update-backend` skill for architecture details, command patterns, trait implementations, config access, and `sealg` testing workflows.
 
 ## Code Style
 
 Enforced by Biome (TS) and `cargo fmt` + Clippy (Rust). See `biome.json`.
-
-## Configuration Pattern
-
-Configuration is handled in Rust. Source of truth:
-`crates/config/global_config.yaml` (`.env` / `APP__`-prefixed env overrides;
-`APP_CONFIG_PATH` for a deployed binary).
-
-```rust
-let config = app_config::get_config();
-println!("Model: {}", config.default_llm.default_model);
-```
 
 ## Commit Message Convention
 

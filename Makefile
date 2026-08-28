@@ -48,7 +48,7 @@ build-release: ## Build the whole workspace (release)
 ########################################################
 
 ### Initialization
-.PHONY: setup banner logo
+.PHONY: setup
 
 setup: ## Set up dev environment from scratch (installs deps, copies .env, checks tooling)
 	@echo "$(BLUE)🔧 Setting up dev environment...$(RESET)"
@@ -69,19 +69,6 @@ setup: ## Set up dev environment from scratch (installs deps, copies .env, check
 		echo "$(GREEN)✅ .env already exists$(RESET)"; \
 	fi
 	@echo "$(GREEN)✅ Setup complete. Run 'cargo run -p sealg -- --help' to get started.$(RESET)"
-
-### Asset Generation
-.PHONY: banner logo
-
-banner: ## Generate project banner image (requires APP__GEMINI_API_KEY)
-	@echo "$(YELLOW)🔍Generating banner...$(RESET)"
-	@cargo run -p assetgen --bin asset-gen -- banner
-	@echo "$(GREEN)✅Banner generated at media/banner.png$(RESET)"
-
-logo: ## Generate logo, icons, and favicon (requires APP__GEMINI_API_KEY)
-	@echo "$(YELLOW)🔍Generating logo and favicon...$(RESET)"
-	@cargo run -p assetgen --bin asset-gen -- logo
-	@echo "$(GREEN)✅Logo assets saved to docs/public/$(RESET)"
 
 
 
@@ -204,7 +191,7 @@ bump-version: ## Bump version across all manifests (usage: make bump-version VER
 		echo "Usage: make bump-version VERSION=x.y.z"; \
 		exit 1; \
 	fi
-	@for f in crates/cli/Cargo.toml crates/engine/Cargo.toml crates/config/Cargo.toml crates/assetgen/Cargo.toml; do \
+	@for f in crates/cli/Cargo.toml crates/engine/Cargo.toml; do \
 		perl -i.bak -0pe 's/^version = "[^"]*"/version = "$(VERSION)"/m' $$f && rm $$f.bak; \
 	done
 	@jq --arg v "$(VERSION)" '.version = $$v' package.json > /tmp/_package.json && mv /tmp/_package.json package.json
