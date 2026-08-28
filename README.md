@@ -34,7 +34,7 @@ and enforcement live.
 | Feature | Tech Stack |
 |---------|:----------:|
 | **Core** | `engine` crate - env-resolved gateway config + hand-rolled MCP client (no transport deps) |
-| **CLI** | `sealg` binary - `list` / `call` / `doctor` / `init` |
+| **CLI** | `sealg` binary - `list` / `call` / `doctor` / `mcp` / `init` |
 | **Transport** | MCP Streamable HTTP to the gateway's `/mcp/{api_key}/` endpoint |
 | **Config** | `app-config` crate (YAML + `APP__` env overrides + sanitizer) |
 | **Logging** | `tracing` + redaction layer |
