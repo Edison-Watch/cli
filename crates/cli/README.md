@@ -3,7 +3,7 @@
 `sealg` is a thin MCP client to the SealGate gateway. `list` and `call` forward
 `tools/list` / `tools/call` to the per-user gateway endpoint, where the gateway
 applies all policy and enforcement. `doctor` reports local environment facts,
-`init` onboards the template, and `mcp` is a stub for the future MCP transport.
+and `mcp` is a stub for the future MCP transport.
 
 ## Build
 

@@ -48,7 +48,7 @@ build-release: ## Build the whole workspace (release)
 ########################################################
 
 ### Initialization
-.PHONY: setup init banner logo
+.PHONY: setup banner logo
 
 setup: ## Set up dev environment from scratch (installs deps, copies .env, checks tooling)
 	@echo "$(BLUE)🔧 Setting up dev environment...$(RESET)"
@@ -69,13 +69,6 @@ setup: ## Set up dev environment from scratch (installs deps, copies .env, check
 		echo "$(GREEN)✅ .env already exists$(RESET)"; \
 	fi
 	@echo "$(GREEN)✅ Setup complete. Run 'cargo run -p sealg -- --help' to get started.$(RESET)"
-
-init: ## Onboard the template into a real project (sealg init). Bare = wizard; PROFILE=/CONFIG=/DRY_RUN=1/ARGS= for headless.
-	@cargo run -q -p sealg -- init \
-		$(if $(PROFILE),--profile $(PROFILE),) \
-		$(if $(CONFIG),--config $(CONFIG),) \
-		$(if $(DRY_RUN),--dry-run,) \
-		$(ARGS)
 
 ### Asset Generation
 .PHONY: banner logo

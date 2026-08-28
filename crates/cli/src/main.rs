@@ -3,13 +3,11 @@
 //! A thin MCP client to the SealGate gateway. `list` and `call` forward
 //! `tools/list` / `tools/call` to the per-user gateway endpoint (all policy and
 //! enforcement live in the gateway). `doctor` reports local environment facts,
-//! `init` onboards the template, and `mcp` is a stub for the future MCP
-//! transport.
+//! and `mcp` is a stub for the future MCP transport.
 
 #[cfg(feature = "cli")]
 mod diagnostics;
 mod gateway_cmd;
-mod init;
 mod mcp;
 
 use clap::{Parser, Subcommand};
@@ -32,9 +30,6 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Onboard this template into a real project (rename, prune, .env).
-    Init(init::InitArgs),
-
     /// (stub) Expose the gateway over a local MCP transport - not yet implemented.
     Mcp,
 
@@ -88,12 +83,6 @@ async fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Init(args) => {
-            if let Err(e) = init::run(args) {
-                eprintln!("error: {e:#}");
-                std::process::exit(1);
-            }
-        }
         Commands::Mcp => mcp::run(),
         #[cfg(feature = "cli")]
         Commands::Doctor { json, out } => diagnostics::cmd_doctor(json, out).await,
