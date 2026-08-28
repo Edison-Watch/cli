@@ -12,6 +12,12 @@ use std::time::Duration;
 /// Timeout for the connect + a single request round-trip.
 const TIMEOUT: Duration = Duration::from_secs(30);
 
+/// Exit code when a gateway tool call returns an MCP error (`isError: true`).
+/// Named rather than magic; the value follows the CLI exit-code taxonomy in the
+/// gateway design doc (`dev-docs/architecture/multi-interface-design.md` §5:
+/// 6 = upstream tool error), distinct from 1 (client/transport) and 2 (usage).
+const EXIT_TOOL_ERROR: i32 = 6;
+
 /// `sealg list [--json]` — list the user's gateway tools.
 pub async fn cmd_list(json_out: bool) {
     if let Err(e) = run_list(json_out).await {
@@ -42,7 +48,7 @@ async fn run_list(json_out: bool) -> Result<(), GatewayError> {
     Ok(())
 }
 
-/// `sealg gw-call <tool> [--args '<json>'] [--json]` — call one gateway tool.
+/// `sealg gw-call <tool> [--args '<json>']` — call one gateway tool.
 pub async fn cmd_call(tool: &str, args: &str) {
     match run_call(tool, args).await {
         Ok(exit_code) => std::process::exit(exit_code),
@@ -72,5 +78,5 @@ async fn run_call(tool: &str, args: &str) -> Result<i32, GatewayError> {
     // Mirror the MCP tool-call response: an `isError: true` result is a failed
     // call and must not exit 0.
     let is_error = result.get("isError").and_then(Value::as_bool) == Some(true);
-    Ok(if is_error { 6 } else { 0 })
+    Ok(if is_error { EXIT_TOOL_ERROR } else { 0 })
 }

@@ -221,7 +221,10 @@ impl GatewayClient {
         if e.is_timeout() {
             GatewayError::Timeout
         } else {
-            GatewayError::Network(format!("POST {}: {}", self.display_url(), e))
+            // `reqwest::Error`'s Display embeds the original request URL, which
+            // carries the API key in its `/mcp/{key}/` path — strip it with
+            // `without_url()` so only our already-redacted URL is shown.
+            GatewayError::Network(format!("POST {}: {}", self.display_url(), e.without_url()))
         }
     }
 
@@ -233,11 +236,13 @@ impl GatewayClient {
     }
 }
 
-/// Replace the API key wherever it appears in `url` with `***`. Pure, so the
-/// redaction guarantee is unit-tested without a live client.
+/// Redact the API key from `url` by replacing the `/{key}/` path segment with
+/// `/***/`. Targeting the delimited segment (rather than a blanket replace of
+/// the key substring) avoids corrupting an unrelated host/path that happens to
+/// contain the key text. Pure, so the redaction guarantee is unit-tested.
 fn redact_url(url: &str, api_key: Option<&str>) -> String {
     match api_key {
-        Some(key) if !key.is_empty() => url.replace(key, "***"),
+        Some(key) if !key.is_empty() => url.replace(&format!("/{key}/"), "/***/"),
         _ => url.to_string(),
     }
 }
@@ -379,6 +384,12 @@ mod tests {
         assert_eq!(
             redact_url("https://gw.example/mcp/", None),
             "https://gw.example/mcp/"
+        );
+        // Only the `/{key}/` path segment is redacted: a host containing the
+        // key text is left intact (no blanket replace-all corruption).
+        assert_eq!(
+            redact_url("https://abc.example/mcp/abc/", Some("abc")),
+            "https://abc.example/mcp/***/"
         );
     }
 }
