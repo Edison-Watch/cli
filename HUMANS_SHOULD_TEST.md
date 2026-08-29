@@ -13,10 +13,8 @@ The release workflow builds `sealg` per platform; the produced binaries can't
 be fully exercised in CI.
 
 - [ ] **Downloaded binary runs** - On each target OS (macOS, Windows, Linux),
-  download the release archive, extract `sealg`, and run `sealg --help`,
-  `sealg call ping --json`, and `sealg doctor --json`. Also run `sealg mcp`
-  and confirm the documented stub behaviour: a stderr "not implemented" notice
-  and exit code 69.
+  download the release archive, extract `sealg`, and run `sealg --help` and
+  `sealg doctor --json` (both work offline, no gateway needed).
 - [ ] **`serve` binds and shuts down** - Run `sealg serve`, hit
   `GET /healthz`, then send SIGINT/SIGTERM (Ctrl-C) and confirm it shuts down
   gracefully without a panic or hung socket.

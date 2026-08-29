@@ -61,6 +61,22 @@ impl GatewayConfig {
         Self::from_getter(|k| std::env::var(k).ok().filter(|v| !v.trim().is_empty()))
     }
 
+    /// Resolve from the environment, then override the gateway origin with
+    /// `url` when it is `Some` and non-blank (the `--gateway-url` flag). A
+    /// trailing `/` is trimmed to match [`from_env`](Self::from_env); an
+    /// override that is blank — or degenerate, like `/` or `///`, which trims to
+    /// empty — is ignored so the env/default value stands.
+    pub fn from_env_with_url_override(url: Option<String>) -> Self {
+        let mut cfg = Self::from_env();
+        if let Some(u) = url {
+            let trimmed = u.trim().trim_end_matches('/');
+            if !trimmed.is_empty() {
+                cfg.base_url = trimmed.to_string();
+            }
+        }
+        cfg
+    }
+
     /// Resolve from an arbitrary getter (the test seam).
     pub fn from_getter(get: impl Fn(&str) -> Option<String>) -> Self {
         let base_url = get(env_keys::URL)
@@ -154,6 +170,33 @@ mod tests {
             ("REQUESTS_CA_BUNDLE", "/b.pem"),
         ]));
         assert_eq!(c.ca_bundle.as_deref(), Some("/a.pem"));
+    }
+
+    #[test]
+    fn url_override_trims_trailing_slash_and_ignores_blank() {
+        // A non-blank override replaces base_url and drops the trailing slash.
+        let cfg =
+            GatewayConfig::from_env_with_url_override(Some("https://gw.example.com/".to_string()));
+        assert_eq!(cfg.base_url, "https://gw.example.com");
+
+        // A blank / whitespace-only override is ignored, leaving the resolved
+        // base_url identical to plain `from_env` (deterministic regardless of
+        // ambient SEALGATE_URL).
+        let base = GatewayConfig::from_env().base_url;
+        let cfg = GatewayConfig::from_env_with_url_override(Some("   ".to_string()));
+        assert_eq!(cfg.base_url, base);
+        let cfg = GatewayConfig::from_env_with_url_override(None);
+        assert_eq!(cfg.base_url, base);
+
+        // A degenerate override that trims to empty (all slashes) is ignored
+        // too, so base_url never becomes empty (which would break mcp_url()).
+        for degenerate in ["/", "///", "  //  "] {
+            let cfg = GatewayConfig::from_env_with_url_override(Some(degenerate.to_string()));
+            assert_eq!(
+                cfg.base_url, base,
+                "override {degenerate:?} should be ignored"
+            );
+        }
     }
 
     #[test]

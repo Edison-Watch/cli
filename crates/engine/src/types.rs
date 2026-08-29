@@ -111,65 +111,6 @@ pub struct DoctorReport {
 }
 
 // ---------------------------------------------------------------------------
-// Scenario types
-// ---------------------------------------------------------------------------
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Scenario {
-    #[serde(default)]
-    pub name: Option<String>,
-    pub steps: Vec<ScenarioStep>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ScenarioStep {
-    Call {
-        call: String,
-        #[serde(default)]
-        args: serde_json::Value,
-        #[serde(default = "default_expect_status")]
-        expect_status: String,
-        #[serde(default = "default_timeout_ms")]
-        timeout_ms: u64,
-    },
-    Probe {
-        probe: String,
-    },
-}
-
-fn default_expect_status() -> String {
-    "pass".to_string()
-}
-
-fn default_timeout_ms() -> u64 {
-    30_000
-}
-
-// ---------------------------------------------------------------------------
-// Scenario result
-// ---------------------------------------------------------------------------
-
-/// Result of a scenario run.
-///
-/// When using `run_scenario_interactive`, `step_results` may contain fewer
-/// entries than the declared scenario steps if the user aborts mid-run or
-/// a step fails and the user chooses not to continue. `overall_status` values:
-/// - `Pass` – every step was decided (run or skip) and all executed steps
-///   met expectations. Note: individual steps may have been skipped by the
-///   user - `Pass` does not guarantee every step ran.
-/// - `Skip` – user aborted before all steps were reached, OR every step was
-///   explicitly skipped.
-/// - `Fail` – at least one step failed its expectation (run may be partial if
-///   user also aborted at the failure dialog).
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ScenarioResult {
-    pub name: Option<String>,
-    pub overall_status: Status,
-    pub step_results: Vec<CommandResult>,
-}
-
-// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 

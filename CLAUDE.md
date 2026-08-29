@@ -2,10 +2,11 @@ This file provides guidance to AI agents working with code in this repository.
 
 ## Project Overview
 
-SealGate's command-line interface. Business logic is written **once** as a typed
-async `Command` in the `engine` crate and exposed through the `sealg` binary (and,
-later, an MCP transport). The `engine` core has no transport dependency;
-transports live in `crates/cli` behind cargo features.
+SealGate's command-line interface. `sealg` is a thin MCP client to the SealGate
+gateway: `list` and `call` forward `tools/list` / `tools/call` to the per-user
+gateway endpoint, where all policy and enforcement live. The `engine` core holds
+the gateway client/config plus local `doctor` diagnostics and has no transport
+dependency.
 **Before any other work in this repo, enable prek:** `bun add -g prek && prek install`. Hooks are defined in `prek.toml`.
 
 ## Common Commands
@@ -13,17 +14,15 @@ transports live in `crates/cli` behind cargo features.
 ```bash
 cargo test --workspace  # Run Rust tests
 cargo clippy --workspace --all-targets -- -D warnings
-sealg call ping --json  # Invoke a command headlessly
-make new name=fetch_url # Scaffold a new engine command
+sealg list              # List the user's tools from the gateway
+sealg call <tool> --args '{...}'  # Call a gateway tool via tools/call
 ```
 
 ## Architecture
 
-- **crates/engine/** - typed async `Command` registry with `inventory`
-  self-registration; per-request `Ctx`; capability traits. No transport deps.
+- **crates/engine/** - `GatewayConfig` (env-resolved coordinates) + `GatewayClient`
+  (hand-rolled MCP-over-HTTP client), plus `doctor` env facts. No transport deps.
 - **crates/cli/** - the `sealg` binary; the `cli` surface is a cargo feature.
-- **crates/config/** - crate `app-config`; `AppConfig` (secrets) vs sanitized
-  `FrontendConfig`. The sanitizer is a security boundary.
 
 > **Making backend changes?** Use the `update-backend` skill for architecture details, command patterns, trait implementations, config access, and `sealg` testing workflows.
 
@@ -33,14 +32,16 @@ Enforced by Biome (TS) and `cargo fmt` + Clippy (Rust). See `biome.json`.
 
 ## Configuration Pattern
 
-Configuration is handled in Rust. Source of truth:
-`crates/config/global_config.yaml` (`.env` / `APP__`-prefixed env overrides;
-`APP_CONFIG_PATH` for a deployed binary).
-
-```rust
-let config = app_config::get_config();
-println!("Model: {}", config.default_llm.default_model);
-```
+`sealg` is a thin, stateless client: all configuration is resolved from the
+**environment** (no config files), so the binary drops into any sandbox. The
+gateway coordinates are read once at startup by `GatewayConfig::from_env`
+(`crates/engine/src/gateway/config.rs`): `SEALGATE_URL` (gateway origin;
+defaults to localhost), `SEALGATE_API_KEY` (optional — embedded in the
+`/mcp/{key}/` path, else auth is injected upstream), `SEALGATE_SECRET_KEY`,
+`SEALGATE_CONVERSATION_ID` (falling back to Centaur's `CENTAUR_THREAD_KEY`), and
+a MITM CA bundle from `SSL_CERT_FILE`/`REQUESTS_CA_BUNDLE`/`NODE_EXTRA_CA_CERTS`.
+The `--gateway-url` flag on `list`/`call` overrides `SEALGATE_URL` per
+invocation (`from_env_with_url_override`).
 
 ## Commit Message Convention
 

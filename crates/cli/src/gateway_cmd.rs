@@ -18,16 +18,16 @@ const TIMEOUT: Duration = Duration::from_secs(30);
 /// caller can tell a failed tool call apart from a CLI or connection failure.
 const EXIT_TOOL_ERROR: i32 = 6;
 
-/// `sealg list [--json]` — list the user's gateway tools.
-pub async fn cmd_list(json_out: bool) {
-    if let Err(e) = run_list(json_out).await {
+/// `sealg list [--json] [--gateway-url <url>]` — list the user's gateway tools.
+pub async fn cmd_list(json_out: bool, gateway_url: Option<String>) {
+    if let Err(e) = run_list(json_out, gateway_url).await {
         eprintln!("error: {e}");
         std::process::exit(1);
     }
 }
 
-async fn run_list(json_out: bool) -> Result<(), GatewayError> {
-    let cfg = GatewayConfig::from_env();
+async fn run_list(json_out: bool, gateway_url: Option<String>) -> Result<(), GatewayError> {
+    let cfg = GatewayConfig::from_env_with_url_override(gateway_url);
     let client = GatewayClient::connect(cfg, TIMEOUT).await?;
     let tools = client.tools_list().await?;
 
@@ -48,9 +48,10 @@ async fn run_list(json_out: bool) -> Result<(), GatewayError> {
     Ok(())
 }
 
-/// `sealg gw-call <tool> [--args '<json>']` — call one gateway tool.
-pub async fn cmd_call(tool: &str, args: &str) {
-    match run_call(tool, args).await {
+/// `sealg call <tool> [--args '<json>'] [--gateway-url <url>]` — call one
+/// gateway tool via MCP `tools/call`.
+pub async fn cmd_call(tool: &str, args: &str, gateway_url: Option<String>) {
+    match run_call(tool, args, gateway_url).await {
         Ok(exit_code) => std::process::exit(exit_code),
         Err(e) => {
             eprintln!("error: {e}");
@@ -62,11 +63,15 @@ pub async fn cmd_call(tool: &str, args: &str) {
 /// Returns the process exit code: `0` on a normal result, non-zero when the
 /// gateway returns an MCP tool error (`isError: true`) — the result is still
 /// printed so the caller sees the error content.
-async fn run_call(tool: &str, args: &str) -> Result<i32, GatewayError> {
+async fn run_call(
+    tool: &str,
+    args: &str,
+    gateway_url: Option<String>,
+) -> Result<i32, GatewayError> {
     let arguments: Value = serde_json::from_str(args)
         .map_err(|e| GatewayError::Config(format!("invalid --args JSON: {e}")))?;
 
-    let cfg = GatewayConfig::from_env();
+    let cfg = GatewayConfig::from_env_with_url_override(gateway_url);
     let client = GatewayClient::connect(cfg, TIMEOUT).await?;
     let result = client.tools_call(tool, arguments).await?;
 
