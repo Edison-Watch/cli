@@ -21,8 +21,8 @@ import pytest
 # Import the package straight from the source dir (no install needed).
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from sealg import client  # noqa: E402
-from sealg.client import GatewayConfig, GatewayError, RpcError, redact_url  # noqa: E402
+from sealg import client
+from sealg.client import GatewayConfig, GatewayError, RpcError, redact_url
 
 _extract = client._extract_rpc_result
 

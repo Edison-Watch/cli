@@ -21,7 +21,7 @@ import ssl
 from collections.abc import Mapping
 from dataclasses import dataclass
 from importlib.metadata import PackageNotFoundError, version
-from typing import Any
+from typing import Any, Self
 
 import httpx
 
@@ -204,7 +204,7 @@ class GatewayClient:
         # to 10); the gateway's trailing-slash /mcp/{key}/ path can 307-normalize.
         self._http = httpx.Client(timeout=timeout, verify=verify, follow_redirects=True)
 
-    def __enter__(self) -> GatewayClient:
+    def __enter__(self) -> Self:
         self.connect()
         return self
 

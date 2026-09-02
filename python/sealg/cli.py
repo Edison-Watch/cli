@@ -86,7 +86,7 @@ def list_tools(
             tools = client.tools_list()
         finally:
             client.close()
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(EXIT_ERROR) from exc
 
@@ -130,7 +130,7 @@ def call_tool(
             result = client.tools_call(tool, arguments)
         finally:
             client.close()
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(EXIT_ERROR) from exc
 

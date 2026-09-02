@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Fail if the SealGate wire contract drifts between the Python and Rust clients.
 
 This repo ships two ``sealg`` clients for the same MCP-over-HTTP gateway endpoint:

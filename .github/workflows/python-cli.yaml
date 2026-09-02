@@ -38,7 +38,7 @@ jobs:
         # deps (httpx, typer) must be installed there, alongside ruff/ty/pytest.
         run: |
           uv venv
-          uv pip install ./python ruff ty pytest httpx
+          uv pip install ./python 'ruff==0.16.5' 'ty==0.0.77' pytest httpx
 
       - name: Ruff format check
         run: uv run ruff format --check python/ scripts/check_wire_contract.py
