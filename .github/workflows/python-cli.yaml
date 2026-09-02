@@ -1,0 +1,56 @@
+name: Python CLI
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'python/**'
+      - 'scripts/check_wire_contract.py'
+      - 'crates/engine/src/gateway/**'
+      - 'crates/cli/src/gateway_cmd.rs'
+      - '.github/workflows/python-cli.yaml'
+  push:
+    branches: [main]
+    paths:
+      - 'python/**'
+      - 'scripts/check_wire_contract.py'
+      - 'crates/engine/src/gateway/**'
+      - 'crates/cli/src/gateway_cmd.rs'
+      - '.github/workflows/python-cli.yaml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-cli:
+    name: lint, type-check, test, wire-contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Create venv with the package and tooling
+        # ty resolves imports against the active venv, so the package and its
+        # deps (httpx, typer) must be installed there, alongside ruff/ty/pytest.
+        run: |
+          uv venv
+          uv pip install ./python 'ruff==0.16.5' 'ty==0.0.77' pytest httpx
+
+      - name: Ruff format check
+        run: uv run ruff format --check python/ scripts/check_wire_contract.py
+
+      - name: Ruff lint
+        run: uv run ruff check python/ scripts/check_wire_contract.py
+
+      - name: Type check (ty)
+        run: uv run ty check python/sealg scripts/check_wire_contract.py
+
+      - name: Tests
+        run: uv run pytest python/tests -q
+
+      - name: Wire contract (Python <-> Rust clients agree)
+        run: python3 scripts/check_wire_contract.py
