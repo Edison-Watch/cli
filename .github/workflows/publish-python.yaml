@@ -1,0 +1,68 @@
+name: Publish Python (sealg)
+
+# Publishes the Python `sealg` package (python/) to PyPI so `uvx sealg` resolves.
+#
+# Trigger: push a tag `sealg-py-vX.Y.Z` (pre-releases: `sealg-py-vX.Y.Z-rc.1`).
+# The Python package versions independently of the Rust binary (which releases on
+# `vX.Y.Z` via release.yml), so it gets its own tag namespace - a Rust release
+# never republishes the Python package and vice versa.
+#
+# Auth is PyPI Trusted Publishing (OIDC): no API token is stored. One-time setup
+# on PyPI is required before the first run - see RELEASING.md ("Publish the
+# Python client").
+
+on:
+  push:
+    tags:
+      - "sealg-py-v[0-9]+.[0-9]+.[0-9]+"
+      - "sealg-py-v[0-9]+.[0-9]+.[0-9]+-*"
+  # Manual build-only run to validate packaging without publishing.
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Verify tag matches package version
+        # Only enforced on tag pushes; skipped for workflow_dispatch (build-only).
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          tag_ver="${GITHUB_REF_NAME#sealg-py-v}"
+          pkg_ver="$(python3 -c 'import tomllib,pathlib; print(tomllib.loads(pathlib.Path("python/pyproject.toml").read_text())["project"]["version"])')"
+          if [ "$tag_ver" != "$pkg_ver" ]; then
+            echo "::error::tag $GITHUB_REF_NAME implies version '$tag_ver' but python/pyproject.toml is '$pkg_ver'. Bump the version before tagging."
+            exit 1
+          fi
+          echo "tag and package agree on version $pkg_ver"
+
+      - name: Build sdist + wheel
+        run: uv build python/ --out-dir dist
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sealg-dist
+          path: dist/
+
+  publish:
+    # Tag pushes publish; the manual build-only run stops after `build`.
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write # OIDC token for PyPI Trusted Publishing
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sealg-dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

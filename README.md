@@ -85,6 +85,18 @@ cargo run -p sealg -- call some_tool --args '{"query": "hello"}'
 cargo run -p sealg -- list --gateway-url https://dashboard.sealgate.ai
 ```
 
+### Python client
+
+A `uvx`-installable Python client exposing the same `sealg` surface lives in
+[`python/`](python/) and is published to PyPI:
+
+```bash
+uvx sealg doctor
+```
+
+It mirrors the Rust binary's commands and exit codes; the two are kept in sync
+by `scripts/check_wire_contract.py`. See [`python/README.md`](python/README.md).
+
 ## Agent Skills
 
 Claude Code skills live in `.claude/skills/`. Invoke them with `/skill-name`

@@ -50,6 +50,41 @@ the **Actions** tab; all platforms build in parallel.
 Once CI completes, visit **Releases** on GitHub, confirm the per-platform
 archives are attached, edit the release notes if desired, and publish.
 
+## Publish the Python client
+
+The Python `sealg` package (`python/`) is published to PyPI so `uvx sealg`
+resolves. It versions independently of the Rust binary and has its own tag
+namespace, `sealg-py-vX.Y.Z`, driving
+[`publish-python.yaml`](.github/workflows/publish-python.yaml).
+
+### One-time PyPI setup (Trusted Publishing)
+
+No API token is stored; the workflow authenticates via OIDC. Configure this
+once on PyPI (a maintainer action, not something CI can do):
+
+1. Create the project on PyPI (or, for the very first upload, add the trusted
+   publisher as a *pending* publisher at
+   https://pypi.org/manage/account/publishing/).
+2. Add a GitHub trusted publisher with:
+   - Owner `Edison-Watch`, repository `cli`
+   - Workflow `publish-python.yaml`
+   - Environment `pypi`
+3. Create a GitHub Environment named `pypi` in the repo settings (optionally
+   restrict it to tags).
+
+### Cut a Python release
+
+```bash
+# 1. Bump python/pyproject.toml `version` (e.g. 0.1.0 -> 0.1.1) and commit.
+# 2. Tag with the matching version and push:
+git tag sealg-py-v0.1.1
+git push origin sealg-py-v0.1.1
+```
+
+The workflow verifies the tag matches `python/pyproject.toml` (a mismatch fails
+before publishing), builds the sdist + wheel, and uploads to PyPI. Run it via
+**workflow_dispatch** first to build-and-validate without publishing.
+
 ## Code Signing (optional)
 
 `sealg` is a headless binary, so signing is not required to run it. If you
