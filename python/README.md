@@ -13,12 +13,22 @@ pre-commit + CI check): every shared wire constant lives once in
 
 ## Install and run
 
+Published on PyPI, so no checkout is needed:
+
+```
+uvx sealg doctor                 # run without installing
+uv tool install sealg            # or install it on PATH
+```
+
+From a local checkout, or to pin to an unreleased commit:
+
 ```
 uvx --from python/ sealg doctor                    # from a checkout
 uvx --from 'git+https://github.com/Edison-Watch/cli#subdirectory=python' sealg list
 ```
 
-Or `pip install ./python` into a virtualenv, then run `sealg`.
+Or `pip install sealg` (or `pip install ./python`) into a virtualenv, then run
+`sealg`.
 
 ## Commands
 
