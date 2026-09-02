@@ -78,12 +78,14 @@ class GatewayConfig:
 
     @staticmethod
     def _get(env: Mapping[str, str], key: str) -> str | None:
-        """Return a non-blank env value or None (blank is treated as unset)."""
+        """Return the raw env value if non-blank, else None. strip() is only the
+        blank test - the value itself is returned unmodified, matching the Rust
+        client (`.filter(|v| !v.trim().is_empty())`), so a padded key or id is
+        sent identically by both clients."""
         val = env.get(key)
-        if val is None:
+        if val is None or not val.strip():
             return None
-        val = val.strip()
-        return val or None
+        return val
 
     @classmethod
     def from_env(
@@ -151,9 +153,14 @@ def _extract_rpc_result(content_type: str, body: str, want_id: int) -> Any:
     return _rpc_message_to_result(msg)
 
 
-def _rpc_message_to_result(msg: dict) -> Any:
+def _rpc_message_to_result(msg: object) -> Any:
+    # A valid-JSON scalar (e.g. `5`) is a protocol error, not a crash.
+    if not isinstance(msg, dict):
+        raise GatewayError("JSON-RPC response was not an object")
     if "error" in msg and msg["error"] is not None:
         err = msg["error"]
+        if not isinstance(err, dict):
+            raise GatewayError("JSON-RPC error was not an object")
         raise RpcError(
             code=int(err.get("code", 0)),
             message=str(err.get("message", "unknown error")),
@@ -190,19 +197,40 @@ class GatewayClient:
     def __init__(self, cfg: GatewayConfig, timeout: float = DEFAULT_TIMEOUT) -> None:
         self.cfg = cfg
         self.url = cfg.mcp_url()
+        _u = httpx.URL(self.url)
+        self._origin = (_u.scheme, _u.host, _u.port)
         self._session_id: str | None = None
         self._next_id = 0
         # verify: add the MITM CA to the system trust store (additive, matching
-        # the Rust client's add_root_certificate) rather than replacing it.
+        # the Rust client's add_root_certificate) rather than replacing it. A
+        # missing/invalid bundle surfaces as GatewayError, not a raw ssl/OSError.
         verify: ssl.SSLContext | bool = True
         if cfg.ca_bundle:
             ctx = ssl.create_default_context()
-            ctx.load_verify_locations(cafile=cfg.ca_bundle)
+            try:
+                ctx.load_verify_locations(cafile=cfg.ca_bundle)
+            except (OSError, ssl.SSLError) as e:
+                raise GatewayError(f"CA bundle {cfg.ca_bundle}: {e}") from e
             verify = ctx
-        # trust_env=True (default) honors HTTPS_PROXY/HTTP_PROXY.
-        # follow_redirects mirrors reqwest's default (the Rust client follows up
-        # to 10); the gateway's trailing-slash /mcp/{key}/ path can 307-normalize.
-        self._http = httpx.Client(timeout=timeout, verify=verify, follow_redirects=True)
+        # trust_env=True (default) honors HTTPS_PROXY/HTTP_PROXY. follow_redirects
+        # mirrors reqwest (the Rust client follows up to 10; cap it the same so
+        # redirect-exhaustion behavior matches). The request hook strips the
+        # credential headers on any cross-origin redirect so a redirect to a
+        # different host can't carry sealg's secret key or session id off the
+        # configured gateway origin.
+        self._http = httpx.Client(
+            timeout=timeout,
+            verify=verify,
+            follow_redirects=True,
+            max_redirects=10,
+            event_hooks={"request": [self._strip_creds_off_origin]},
+        )
+
+    def _strip_creds_off_origin(self, request: httpx.Request) -> None:
+        origin = (request.url.scheme, request.url.host, request.url.port)
+        if origin != self._origin:
+            for header in (SECRET_KEY_HEADER, CONVERSATION_ID_HEADER, "Mcp-Session-Id"):
+                request.headers.pop(header, None)
 
     def __enter__(self) -> Self:
         self.connect()
@@ -289,9 +317,10 @@ class GatewayClient:
         # Anything else (an un-followed 3xx after redirect exhaustion, an auth
         # 401) is an HTTP-level failure, not a body for the JSON-RPC parser.
         if not (200 <= resp.status_code < 300):
-            raise GatewayError(
-                f"gateway returned HTTP {resp.status_code}: {resp.text[:512]}"
-            )
+            # The body may echo the /mcp/{key}/ request URL, so redact the key
+            # before it reaches stderr/logs.
+            body = redact_url(resp.text[:512], self.cfg.api_key)
+            raise GatewayError(f"gateway returned HTTP {resp.status_code}: {body}")
         result = _extract_rpc_result(
             resp.headers.get("content-type", ""), resp.text, rpc_id
         )

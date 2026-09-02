@@ -53,16 +53,22 @@ def doctor(
             (k for k in ENV_CA_BUNDLE if os.environ.get(k, "").strip()), None
         ),
     }
+    # Separate "could we reach + initialize the gateway" (reachable) from "did
+    # the tools/list probe succeed" (readiness), so a connect that succeeds but
+    # a probe that fails isn't reported as unreachable.
     try:
         client = GatewayClient(cfg).connect()
-        try:
-            report["reachable"] = True
-            report["tool_count"] = len(client.tools_list())
-        finally:
-            client.close()
     except Exception as exc:  # noqa: BLE001 - doctor reports failures, never raises on them
         report["reachable"] = False
         report["error"] = str(exc)
+    else:
+        report["reachable"] = True
+        try:
+            report["tool_count"] = len(client.tools_list())
+        except Exception as exc:  # noqa: BLE001
+            report["probe_error"] = str(exc)
+        finally:
+            client.close()
 
     _emit(report)  # doctor is a diagnostic; always structured JSON
     if not report["reachable"]:

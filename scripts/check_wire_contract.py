@@ -45,6 +45,7 @@ SNAPSHOT = {
     "DEFAULT_URL": "http://localhost:3000",
     "MCP_PATH_WITH_KEY": "/mcp/{key}/",
     "MCP_PATH_KEYLESS": "/mcp/",
+    "EXIT_ERROR": 1,
     "EXIT_TOOL_ERROR": 6,
 }
 
@@ -201,6 +202,16 @@ def _check_rust(problems: list[str]) -> None:
                 f"Rust client.rs request builder no longer sets {snap_key} = "
                 f"{SNAPSHOT[snap_key]!r} (parser or request builder moved)"
             )
+
+    # EXIT_ERROR (1) is the generic client/transport failure code. The Rust CLI
+    # exits it inline (`std::process::exit(1)`) rather than via a named const, so
+    # assert that literal appears in gateway_cmd.rs to keep the 0/1/6 parity that
+    # contract.py advertises under enforcement on both sides.
+    if f"exit({SNAPSHOT['EXIT_ERROR']})" not in gateway_cmd.replace(" ", ""):
+        problems.append(
+            f"Rust gateway_cmd.rs no longer exits {SNAPSHOT['EXIT_ERROR']} on client failure "
+            "(contract.py EXIT_ERROR)"
+        )
 
 
 def main() -> None:

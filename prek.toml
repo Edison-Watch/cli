@@ -61,4 +61,4 @@ entry = "python3 scripts/check_wire_contract.py"
 pass_filenames = false
 # Run when the Python contract, the Rust gateway source, or the check script
 # changes. Both clients live in this repo, so the check always runs both legs.
-files = "^(python/sealg/(contract|client)\\.py|crates/engine/src/gateway/(config|client)\\.rs|crates/cli/src/gateway_cmd\\.rs|scripts/check_wire_contract\\.py)$"
+files = "^(python/sealg/(contract|client|cli)\\.py|crates/engine/src/gateway/(config|client)\\.rs|crates/cli/src/gateway_cmd\\.rs|scripts/check_wire_contract\\.py)$"

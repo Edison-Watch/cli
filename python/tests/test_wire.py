@@ -84,6 +84,54 @@ def test_blank_values_treated_as_unset():
     assert c.api_key is None
 
 
+def test_nonblank_value_is_returned_unmodified():
+    # strip() is only the blank test; a padded key/id is preserved so the
+    # Python and Rust requests are byte-identical.
+    c = GatewayConfig.from_env(
+        env={"SEALGATE_API_KEY": " k ", "SEALGATE_SECRET_KEY": "s\t"}
+    )
+    assert c.api_key == " k "
+    assert c.secret_key == "s\t"
+
+
+def test_cross_origin_redirect_strips_credential_headers():
+    from sealg.contract import CONVERSATION_ID_HEADER, SECRET_KEY_HEADER
+
+    cfg = GatewayConfig.from_env(
+        env={"SEALGATE_URL": "https://gw.test", "SEALGATE_SECRET_KEY": "s"}
+    )
+    gc = client.GatewayClient(cfg)
+    try:
+        same = httpx.Request(
+            "POST",
+            "https://gw.test/mcp/",
+            headers={SECRET_KEY_HEADER: "s", "Mcp-Session-Id": "x"},
+        )
+        gc._strip_creds_off_origin(same)
+        assert same.headers.get(SECRET_KEY_HEADER) == "s"  # same origin: kept
+        other = httpx.Request(
+            "POST",
+            "https://evil.test/mcp/",
+            headers={
+                SECRET_KEY_HEADER: "s",
+                CONVERSATION_ID_HEADER: "c",
+                "Mcp-Session-Id": "x",
+            },
+        )
+        gc._strip_creds_off_origin(other)
+        assert SECRET_KEY_HEADER not in other.headers  # cross-origin: stripped
+        assert CONVERSATION_ID_HEADER not in other.headers
+        assert "Mcp-Session-Id" not in other.headers
+    finally:
+        gc.close()
+
+
+def test_scalar_json_response_is_protocol_error():
+    # A valid-JSON scalar must be a GatewayError, not an uncaught TypeError.
+    with pytest.raises(GatewayError):
+        _extract("application/json", "5", 1)
+
+
 # --- result extraction (ports client.rs tests) -----------------------------
 
 
@@ -143,6 +191,7 @@ def _mock_client(handler):
         env={"SEALGATE_URL": "https://gw.test", "SEALGATE_API_KEY": "k"}
     )
     gc = client.GatewayClient(cfg)
+    gc._http.close()  # close the real client __init__ opened before swapping it
     gc._http = httpx.Client(
         transport=httpx.MockTransport(handler), follow_redirects=True
     )
