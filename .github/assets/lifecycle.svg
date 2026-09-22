@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 372" width="1040" height="372" font-family="Inter, system-ui, -apple-system, Segoe UI, sans-serif" role="img" aria-label="sealg request lifecycle: sealg list runs an MCP initialize handshake then tools/list and prints tool names; sealg call runs initialize then tools/call and prints the result with an exit code; sealg doctor collects local environment facts and prints a summary without any network call.">
+  <title>sealg request lifecycle</title>
+
+  <defs>
+    <pattern id="grid2" width="34" height="34" patternUnits="userSpaceOnUse">
+      <path d="M34 0H0V34" fill="none" stroke="#0E1414" stroke-width="1"/>
+    </pattern>
+    <marker id="arr-cyan" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <polygon points="0,1 11,6 0,11" fill="#C3FFFD"/>
+    </marker>
+    <marker id="arr-grey" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <polygon points="0,1 11,6 0,11" fill="#9BA4A6"/>
+    </marker>
+    <marker id="arr-green" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <polygon points="0,1 11,6 0,11" fill="#00C781"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1040" height="372" fill="#000000"/>
+  <rect x="0" y="0" width="1040" height="372" fill="url(#grid2)"/>
+
+  <text x="40" y="44" font-size="16" font-weight="700" fill="#F9F9F9">Request lifecycle</text>
+  <text x="40" y="64" font-size="12" fill="#9BA4A6">Every subcommand resolves the gateway from the environment, then does one thing.</text>
+
+  <!-- Row 1: list -->
+  <g>
+    <rect x="40" y="94" width="196" height="46" rx="3" fill="#000000" stroke="#C3FFFD" stroke-width="1.8"/>
+    <text x="58" y="122" font-family="JetBrains Mono, ui-monospace, monospace" font-size="14" font-weight="700" fill="#C3FFFD">sealg list</text>
+
+    <line x1="236" y1="117" x2="300" y2="117" stroke="#9BA4A6" stroke-width="2" marker-end="url(#arr-grey)"/>
+
+    <rect x="308" y="94" width="150" height="46" rx="3" fill="#070909" stroke="#3A4040" stroke-width="1"/>
+    <text x="383" y="121" text-anchor="middle" font-family="JetBrains Mono, ui-monospace, monospace" font-size="12.5" fill="#F9F9F9">initialize</text>
+
+    <line x1="458" y1="117" x2="522" y2="117" stroke="#9BA4A6" stroke-width="2" marker-end="url(#arr-grey)"/>
+
+    <rect x="530" y="94" width="150" height="46" rx="3" fill="#070909" stroke="#3A4040" stroke-width="1"/>
+    <text x="605" y="121" text-anchor="middle" font-family="JetBrains Mono, ui-monospace, monospace" font-size="12.5" fill="#F9F9F9">tools/list</text>
+
+    <line x1="680" y1="117" x2="744" y2="117" stroke="#C3FFFD" stroke-width="2.4" marker-end="url(#arr-cyan)"/>
+
+    <rect x="752" y="94" width="248" height="46" rx="3" fill="none" stroke="#C3FFFD" stroke-width="1.2"/>
+    <text x="876" y="115" text-anchor="middle" font-size="12.5" fill="#F9F9F9">the user's tool names</text>
+    <text x="876" y="132" text-anchor="middle" font-size="10.5" fill="#9BA4A6">text, or --json array</text>
+  </g>
+
+  <!-- Row 2: call -->
+  <g>
+    <rect x="40" y="176" width="196" height="46" rx="3" fill="#000000" stroke="#C3FFFD" stroke-width="1.8"/>
+    <text x="58" y="204" font-family="JetBrains Mono, ui-monospace, monospace" font-size="13" font-weight="700" fill="#C3FFFD">sealg call <tspan fill="#9BA4A6">&lt;tool&gt;</tspan></text>
+
+    <line x1="236" y1="199" x2="300" y2="199" stroke="#9BA4A6" stroke-width="2" marker-end="url(#arr-grey)"/>
+
+    <rect x="308" y="176" width="150" height="46" rx="3" fill="#070909" stroke="#3A4040" stroke-width="1"/>
+    <text x="383" y="203" text-anchor="middle" font-family="JetBrains Mono, ui-monospace, monospace" font-size="12.5" fill="#F9F9F9">initialize</text>
+
+    <line x1="458" y1="199" x2="522" y2="199" stroke="#9BA4A6" stroke-width="2" marker-end="url(#arr-grey)"/>
+
+    <rect x="530" y="176" width="150" height="46" rx="3" fill="#070909" stroke="#3A4040" stroke-width="1"/>
+    <text x="605" y="203" text-anchor="middle" font-family="JetBrains Mono, ui-monospace, monospace" font-size="12.5" fill="#F9F9F9">tools/call</text>
+
+    <line x1="680" y1="199" x2="744" y2="199" stroke="#C3FFFD" stroke-width="2.4" marker-end="url(#arr-cyan)"/>
+
+    <rect x="752" y="176" width="248" height="46" rx="3" fill="none" stroke="#C3FFFD" stroke-width="1.2"/>
+    <text x="876" y="197" text-anchor="middle" font-size="12.5" fill="#F9F9F9">result content</text>
+    <text x="876" y="214" text-anchor="middle" font-size="10.5" fill="#9BA4A6">exit 0 ok · <tspan fill="#FF3B4D">6 tool error</tspan> · 1 transport</text>
+  </g>
+
+  <!-- Row 3: doctor (local, green) -->
+  <g>
+    <rect x="40" y="258" width="196" height="46" rx="3" fill="#000000" stroke="#00C781" stroke-width="1.8"/>
+    <text x="58" y="286" font-family="JetBrains Mono, ui-monospace, monospace" font-size="14" font-weight="700" fill="#00C781">sealg doctor</text>
+
+    <line x1="236" y1="281" x2="522" y2="281" stroke="#00C781" stroke-width="2" marker-end="url(#arr-green)"/>
+    <text x="379" y="273" text-anchor="middle" font-size="10.5" fill="#00C781">local only · no network</text>
+
+    <rect x="530" y="258" width="150" height="46" rx="3" fill="#070909" stroke="#3A4040" stroke-width="1"/>
+    <text x="605" y="285" text-anchor="middle" font-family="JetBrains Mono, ui-monospace, monospace" font-size="11.5" fill="#F9F9F9">collect env facts</text>
+
+    <line x1="680" y1="281" x2="744" y2="281" stroke="#00C781" stroke-width="2.4" marker-end="url(#arr-green)"/>
+
+    <rect x="752" y="258" width="248" height="46" rx="3" fill="none" stroke="#00C781" stroke-width="1.2"/>
+    <text x="876" y="279" text-anchor="middle" font-size="12.5" fill="#F9F9F9">env summary</text>
+    <text x="876" y="296" text-anchor="middle" font-size="10.5" fill="#9BA4A6">human text, or --json / --out</text>
+  </g>
+</svg>
