@@ -18,7 +18,7 @@ where all policy and enforcement live. The binary is **stateless** and resolves
 every coordinate from the **environment** (no config files), so it drops into any
 sandbox and carries no policy of its own.
 
-### The `sealg` surface
+### <img src=".github/assets/terminal.svg" alt="" height="18" valign="middle"> The `sealg` surface
 
 `sealg` is one small binary with three subcommands. `list` and `call` talk to the
 live gateway over MCP; `doctor` stays local and reports environment facts.
@@ -40,7 +40,7 @@ Both `list` and `call` accept `--gateway-url <url>` to override `SEALGATE_URL`
 for a single invocation. Everything else, including the API key and CA bundle, is
 read from the environment (see [Configuration](#configuration)).
 
-## Architecture
+## <img src=".github/assets/icons/network.svg" alt="" height="20" valign="middle"> Architecture
 
 <p align="center">
   <img src=".github/assets/architecture.svg" alt="sealg architecture: an agent or shell runs the stateless sealg binary, which forwards tools/list and tools/call over HTTPS to the per-user SealGate gateway, where all policy, trifecta, and PII enforcement live before reaching connectors; the doctor command is local only." width="960">
@@ -55,7 +55,7 @@ read from the environment (see [Configuration](#configuration)).
 - **`doctor` is local.** It reads OS, session, and environment facts and prints
   them without opening a connection, so it is safe to run anywhere.
 
-### Request lifecycle
+### <img src=".github/assets/icons/flow.svg" alt="" height="18" valign="middle"> Request lifecycle
 
 <p align="center">
   <img src=".github/assets/lifecycle.svg" alt="Request lifecycle: sealg list runs initialize then tools/list and prints tool names; sealg call runs initialize then tools/call and prints the result with an exit code; sealg doctor collects local environment facts and prints a summary with no network call." width="900">
@@ -69,7 +69,7 @@ The workspace splits along the same boundary as the diagram:
 - **`crates/cli/`** the `sealg` binary. The `cli` surface (`doctor`) is a cargo
   feature, so the gateway commands build without the diagnostics code.
 
-## Requirements
+## <img src=".github/assets/icons/package.svg" alt="" height="20" valign="middle"> Requirements
 
 - Rust 1.75+ and Cargo
 - A reachable SealGate gateway (or `SEALGATE_URL=http://localhost:3000` for local
@@ -77,7 +77,7 @@ The workspace splits along the same boundary as the diagram:
 - [Bun](https://bun.sh/) and [prek](https://github.com/j178/prek) for the
   formatting and pre-commit hooks
 
-## Quick Start
+## <img src=".github/assets/icons/bolt.svg" alt="" height="20" valign="middle"> Quick Start
 
 ```bash
 # 1. Build and test the workspace
@@ -100,7 +100,7 @@ run on every commit:
 bun add -g prek && prek install
 ```
 
-### Python client
+### <img src=".github/assets/icons/code.svg" alt="" height="18" valign="middle"> Python client
 
 A `uvx`-installable Python client exposing the same `sealg` surface lives in
 [`python/`](python/) and is published to PyPI:
@@ -112,7 +112,7 @@ uvx sealg doctor
 It mirrors the Rust binary's commands and exit codes; the two are kept in sync by
 `scripts/check_wire_contract.py`. See [`python/README.md`](python/README.md).
 
-## Configuration
+## <img src=".github/assets/icons/gear.svg" alt="" height="20" valign="middle"> Configuration
 
 `sealg` reads its gateway coordinates once at startup with
 `GatewayConfig::from_env` ([`crates/engine/src/gateway/config.rs`](crates/engine/src/gateway/config.rs)).
@@ -126,7 +126,7 @@ Nothing is stored on disk.
 | `SEALGATE_CONVERSATION_ID` | Stable conversation id, sent as `x-sealgate-conversation-id`. Falls back to Centaur's `CENTAUR_THREAD_KEY`. |
 | `SSL_CERT_FILE` / `REQUESTS_CA_BUNDLE` / `NODE_EXTRA_CA_CERTS` | Extra CA bundle to trust, for MITM inspection. The first one set wins. |
 
-## Agent Skills
+## <img src=".github/assets/icons/puzzle.svg" alt="" height="20" valign="middle"> Agent Skills
 
 Claude Code and Codex skills live in `.claude/skills/`. Invoke them with
 `/skill-name`: run `/onboarding`, `/update-backend`, `/code-quality`,
@@ -148,6 +148,6 @@ This software uses the following tools:
 
 Made with [contrib.rocks](https://contrib.rocks).
 
-## License
+## <img src=".github/assets/icons/scale.svg" alt="" height="20" valign="middle"> License
 
 See [LICENSE](LICENSE).
