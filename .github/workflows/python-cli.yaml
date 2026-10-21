@@ -31,6 +31,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
         with:
+          version: "0.13.4"
           enable-cache: true
 
       - name: Create venv with the package and tooling
