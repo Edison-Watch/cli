@@ -27,6 +27,8 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.4"
 
       - name: Verify tag matches package version
         # Only enforced on tag pushes; skipped for workflow_dispatch (build-only).
