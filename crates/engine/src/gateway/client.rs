@@ -1,7 +1,7 @@
 //! Hand-rolled MCP client over Streamable HTTP.
 //!
-//! `sealg` speaks the small slice of MCP it needs — `initialize`, `tools/list`,
-//! `tools/call` — directly to the gateway's `/mcp/{api_key}/` endpoint. No
+//! `sealg` speaks the small slice of MCP it needs - `initialize`, `tools/list`,
+//! `tools/call` - directly to the gateway's `/mcp/{api_key}/` endpoint. No
 //! `rmcp` dependency: the binary stays thin and cold-starts fast (see the
 //! design doc §5A). Transport: MCP Streamable HTTP, protocol `2025-06-18`
 //! (the version the gateway's FastMCP server accepts).
@@ -13,7 +13,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 /// Protocol version `sealg` advertises in `initialize`. Must be a version the
-/// gateway's MCP server (FastMCP) actually supports — it rejects unknown
+/// gateway's MCP server (FastMCP) actually supports - it rejects unknown
 /// versions with JSON-RPC -32600. `2025-06-18` is the latest version the
 /// gateway's FastMCP server accepts.
 pub const PROTOCOL_VERSION: &str = "2025-06-18";
@@ -222,7 +222,7 @@ impl GatewayClient {
             GatewayError::Timeout
         } else {
             // `reqwest::Error`'s Display embeds the original request URL, which
-            // carries the API key in its `/mcp/{key}/` path — strip it with
+            // carries the API key in its `/mcp/{key}/` path - strip it with
             // `without_url()` so only our already-redacted URL is shown.
             GatewayError::Network(format!("POST {}: {}", self.display_url(), e.without_url()))
         }

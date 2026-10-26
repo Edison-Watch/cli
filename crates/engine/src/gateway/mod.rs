@@ -2,7 +2,7 @@
 //!
 //! `sealg` is a thin client: it forwards tool calls to the per-user MCP endpoint
 //! (`/mcp/{api_key}/`), where the gateway applies all policy, trifecta, and PII
-//! enforcement. This module is the whole of that transport — config resolved
+//! enforcement. This module is the whole of that transport - config resolved
 //! from the environment ([`config`]) and a hand-rolled MCP client ([`client`]).
 //!
 //! It deliberately does **not** live in the [`commands`](crate::commands)

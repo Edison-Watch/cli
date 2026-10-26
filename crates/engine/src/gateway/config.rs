@@ -64,8 +64,8 @@ impl GatewayConfig {
     /// Resolve from the environment, then override the gateway origin with
     /// `url` when it is `Some` and non-blank (the `--gateway-url` flag). A
     /// trailing `/` is trimmed to match [`from_env`](Self::from_env); an
-    /// override that is blank — or degenerate, like `/` or `///`, which trims to
-    /// empty — is ignored so the env/default value stands.
+    /// override that is blank - or degenerate, like `/` or `///`, which trims to
+    /// empty - is ignored so the env/default value stands.
     pub fn from_env_with_url_override(url: Option<String>) -> Self {
         let mut cfg = Self::from_env();
         if let Some(u) = url {

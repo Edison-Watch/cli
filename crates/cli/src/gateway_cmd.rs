@@ -18,7 +18,7 @@ const TIMEOUT: Duration = Duration::from_secs(30);
 /// caller can tell a failed tool call apart from a CLI or connection failure.
 const EXIT_TOOL_ERROR: i32 = 6;
 
-/// `sealg list [--json] [--gateway-url <url>]` — list the user's gateway tools.
+/// `sealg list [--json] [--gateway-url <url>]` - list the user's gateway tools.
 pub async fn cmd_list(json_out: bool, gateway_url: Option<String>) {
     if let Err(e) = run_list(json_out, gateway_url).await {
         eprintln!("error: {e}");
@@ -42,13 +42,13 @@ async fn run_list(json_out: bool, gateway_url: Option<String>) -> Result<(), Gat
         );
     } else {
         for t in &tools {
-            println!("{}  —  {}", t.name, t.description);
+            println!("{}  -  {}", t.name, t.description);
         }
     }
     Ok(())
 }
 
-/// `sealg call <tool> [--args '<json>'] [--gateway-url <url>]` — call one
+/// `sealg call <tool> [--args '<json>'] [--gateway-url <url>]` - call one
 /// gateway tool via MCP `tools/call`.
 pub async fn cmd_call(tool: &str, args: &str, gateway_url: Option<String>) {
     match run_call(tool, args, gateway_url).await {
@@ -61,7 +61,7 @@ pub async fn cmd_call(tool: &str, args: &str, gateway_url: Option<String>) {
 }
 
 /// Returns the process exit code: `0` on a normal result, non-zero when the
-/// gateway returns an MCP tool error (`isError: true`) — the result is still
+/// gateway returns an MCP tool error (`isError: true`) - the result is still
 /// printed so the caller sees the error content.
 async fn run_call(
     tool: &str,
