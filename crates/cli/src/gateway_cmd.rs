@@ -42,7 +42,7 @@ async fn run_list(json_out: bool, gateway_url: Option<String>) -> Result<(), Gat
         );
     } else {
         for t in &tools {
-            println!("{}  -  {}", t.name, t.description);
+            println!("{}  \u{2014}  {}", t.name, t.description);
         }
     }
     Ok(())
