@@ -36,7 +36,7 @@ Enforced by Biome (TS) and `cargo fmt` + Clippy (Rust). See `biome.json`.
 **environment** (no config files), so the binary drops into any sandbox. The
 gateway coordinates are read once at startup by `GatewayConfig::from_env`
 (`crates/engine/src/gateway/config.rs`): `SEALGATE_URL` (gateway origin;
-defaults to localhost), `SEALGATE_API_KEY` (optional — embedded in the
+defaults to localhost), `SEALGATE_API_KEY` (optional - embedded in the
 `/mcp/{key}/` path, else auth is injected upstream), `SEALGATE_SECRET_KEY`,
 `SEALGATE_CONVERSATION_ID` (falling back to Centaur's `CENTAUR_THREAD_KEY`), and
 a MITM CA bundle from `SSL_CERT_FILE`/`REQUESTS_CA_BUNDLE`/`NODE_EXTRA_CA_CERTS`.
