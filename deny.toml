@@ -2,6 +2,9 @@
 
 [advisories]
 ignore = [
+    # pin-utils 0.1.0 is unmaintained (archived 2026-10-01) with no successor
+    # release; it is pulled in transitively by reqwest -> hyper/futures-util.
+    { id = "RUSTSEC-2026-0441", reason = "unmaintained transitive dep via reqwest, no safe upgrade" },
 ]
 
 [licenses]
